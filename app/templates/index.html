@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Panel - 多機能情報パネル</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 左ペイン: ステータスパネル -->
+        <div class="status-panel">
+            <!-- 日時・天気ウィジェット -->
+            <div class="widget datetime-weather">
+                <div class="datetime">
+                    <div class="date" id="current-date">--/--/--</div>
+                    <div class="time" id="current-time">--:--</div>
+                </div>
+                <div class="weather">
+                    <div class="weather-icon">
+                        <i class="fas fa-sun" id="weather-icon"></i>
+                    </div>
+                    <div class="weather-info">
+                        <div class="temperature" id="weather-temp">--°C</div>
+                        <div class="location" id="weather-location">高崎市</div>
+                        <div class="description" id="weather-desc">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 室内環境ウィジェット -->
+            <div class="widget environment">
+                <h3><i class="fas fa-home"></i> 室内環境</h3>
+                <div class="env-data">
+                    <div class="env-item">
+                        <i class="fas fa-thermometer-half"></i>
+                        <span class="label">温度</span>
+                        <span class="value" id="indoor-temp">--°C</span>
+                    </div>
+                    <div class="env-item">
+                        <i class="fas fa-tint"></i>
+                        <span class="label">湿度</span>
+                        <span class="value" id="indoor-humidity">--%</span>
+                    </div>
+                    <div class="env-item">
+                        <i class="fas fa-wind"></i>
+                        <span class="label">CO2</span>
+                        <span class="value" id="indoor-co2">-- ppm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spotify「再生中」ウィジェット -->
+            <div class="widget spotify-now-playing">
+                <h3><i class="fab fa-spotify"></i> 再生中</h3>
+                <div class="spotify-content">
+                    <div class="album-art">
+                        <img id="album-art" src="/static/images/default-album.png" alt="アルバムアート">
+                    </div>
+                    <div class="track-info">
+                        <div class="track-name" id="track-name">--</div>
+                        <div class="artist-name" id="artist-name">--</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progress-bar"></div>
+                    </div>
+                    <div class="controls">
+                        <button class="control-btn" id="prev-btn">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="control-btn play-pause" id="play-pause-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="next-btn">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右ペイン: メインコンテンツエリア -->
+        <div class="main-content">
+            <!-- タブナビゲーション -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="spotify">
+                    <i class="fab fa-spotify"></i> Spotify
+                </button>
+                <button class="tab-btn" data-tab="calendar">
+                    <i class="fas fa-calendar"></i> Calendar
+                </button>
+                <button class="tab-btn" data-tab="timer">
+                    <i class="fas fa-clock"></i> Timer
+                </button>
+                <button class="tab-btn" data-tab="pdtimer">
+                    <i class="fas fa-stopwatch"></i> PDTimer
+                </button>
+                <button class="tab-btn" data-tab="news">
+                    <i class="fas fa-newspaper"></i> News
+                </button>
+            </div>
+
+            <!-- コンテンツ表示エリア -->
+            <div class="content-area">
+                <!-- Spotify タブ -->
+                <div class="tab-content active" id="spotify-content">
+                    <h2>プレイリスト</h2>
+                    <div class="playlist-grid" id="playlist-grid">
+                        <!-- プレイリストがここに動的に追加される -->
+                    </div>
+                </div>
+
+                <!-- Calendar タブ -->
+                <div class="tab-content" id="calendar-content">
+                    <h2>今日の予定</h2>
+                    <div class="calendar-events" id="calendar-events">
+                        <!-- カレンダー予定がここに動的に追加される -->
+                    </div>
+                </div>
+
+                <!-- Timer タブ -->
+                <div class="tab-content" id="timer-content">
+                    <h2>タイマー</h2>
+                    <div class="timer-controls">
+                        <div class="timer-display" id="timer-display">00:00:00</div>
+                        <div class="timer-buttons">
+                            <button class="timer-btn" id="timer-start">開始</button>
+                            <button class="timer-btn" id="timer-pause">一時停止</button>
+                            <button class="timer-btn" id="timer-reset">リセット</button>
+                        </div>
+                        <div class="timer-presets">
+                            <button class="preset-btn" data-minutes="5">5分</button>
+                            <button class="preset-btn" data-minutes="10">10分</button>
+                            <button class="preset-btn" data-minutes="15">15分</button>
+                            <button class="preset-btn" data-minutes="30">30分</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDTimer タブ -->
+                <div class="tab-content" id="pdtimer-content">
+                    <h2>ポモドーロタイマー</h2>
+                    <div class="pdtimer-controls">
+                        <div class="pdtimer-display" id="pdtimer-display">25:00</div>
+                        <div class="pdtimer-status" id="pdtimer-status">作業時間</div>
+                        <div class="pdtimer-buttons">
+                            <button class="pdtimer-btn" id="pdtimer-start">開始</button>
+                            <button class="pdtimer-btn" id="pdtimer-pause">一時停止</button>
+                            <button class="pdtimer-btn" id="pdtimer-reset">リセット</button>
+                        </div>
+                        <div class="pdtimer-sessions">
+                            <div class="session-count">セッション: <span id="session-count">0</span>/4</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News タブ -->
+                <div class="tab-content" id="news-content">
+                    <h2>最新ニュース</h2>
+                    <div class="news-list" id="news-list">
+                        <!-- ニュースがここに動的に追加される -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 仮想キーボード (必要に応じて表示) -->
+    <div class="virtual-keyboard" id="virtual-keyboard" style="display: none;">
+        <div class="keyboard-content">
+            <!-- 仮想キーボードの内容 -->
+            <div class="keyboard-row">
+                <button class="key">1</button>
+                <button class="key">2</button>
+                <button class="key">3</button>
+                <button class="key">4</button>
+                <button class="key">5</button>
+                <button class="key">6</button>
+                <button class="key">7</button>
+                <button class="key">8</button>
+                <button class="key">9</button>
+                <button class="key">0</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key">Q</button>
+                <button class="key">W</button>
+                <button class="key">E</button>
+                <button class="key">R</button>
+                <button class="key">T</button>
+                <button class="key">Y</button>
+                <button class="key">U</button>
+                <button class="key">I</button>
+                <button class="key">O</button>
+                <button class="key">P</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key">A</button>
+                <button class="key">S</button>
+                <button class="key">D</button>
+                <button class="key">F</button>
+                <button class="key">G</button>
+                <button class="key">H</button>
+                <button class="key">J</button>
+                <button class="key">K</button>
+                <button class="key">L</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key">Z</button>
+                <button class="key">X</button>
+                <button class="key">C</button>
+                <button class="key">V</button>
+                <button class="key">B</button>
+                <button class="key">N</button>
+                <button class="key">M</button>
+                <button class="key space">スペース</button>
+            </div>
+            <div class="keyboard-actions">
+                <button class="keyboard-btn" id="keyboard-close">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
