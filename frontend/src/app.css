@@ -47,6 +47,28 @@ body {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	overflow-y: auto;
+	max-height: calc(100vh - 40px);
+	padding-right: 10px;
+}
+
+/* スクロールバーのスタイル */
+.status-panel::-webkit-scrollbar {
+	width: 8px;
+}
+
+.status-panel::-webkit-scrollbar-track {
+	background: var(--bg-tertiary);
+	border-radius: 4px;
+}
+
+.status-panel::-webkit-scrollbar-thumb {
+	background: var(--border-color);
+	border-radius: 4px;
+}
+
+.status-panel::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
 }
 
 .widget {
@@ -55,6 +77,7 @@ body {
 	padding: 20px;
 	box-shadow: var(--shadow);
 	border: 1px solid var(--border-color);
+	flex-shrink: 0;
 }
 
 /* 右ペイン: メインコンテンツエリア */
@@ -464,7 +487,8 @@ body {
 
 /* 今日の予定ウィジェット */
 .today-schedule {
-	min-height: 120px;
+	min-height: auto;
+	height: auto;
 }
 
 .schedule-header {
@@ -473,7 +497,7 @@ body {
 }
 
 .schedule-list {
-	max-height: 200px;
+	max-height: 300px;
 	overflow-y: auto;
 }
 

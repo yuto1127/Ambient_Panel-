@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import StatusPanel from './lib/components/StatusPanel.svelte';
-	import MainContent from './lib/components/MainContent.svelte';
-	import { currentTab } from './lib/stores/tabStore.js';
+	import StatusPanel from '$lib/components/StatusPanel.svelte';
+	import MainContent from '$lib/components/MainContent.svelte';
+	import { currentTab } from '$lib/stores/tabStore.js';
 
 	let mounted = false;
 
