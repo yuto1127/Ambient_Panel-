@@ -349,5 +349,7 @@ class ICloudCalendarService:
 
     async def get_today_events(self) -> List[Dict[str, Any]]:
         """今日のイベントを取得（日本の祝日も含む）"""
-        today = datetime.now()
+        # 日本時間（JST）で今日の日付を取得
+        jst = pytz.timezone('Asia/Tokyo')
+        today = datetime.now(jst)
         return await self.get_day_events(today.year, today.month, today.day)

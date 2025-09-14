@@ -68,11 +68,16 @@ async def get_today_events() -> Dict[str, Any]:
         logger.info("Fetching today's events from iCloud calendars")
         events = await icloud_service.get_today_events()
         
+        # 日本時間（JST）で今日の日付を取得
+        import pytz
+        jst = pytz.timezone('Asia/Tokyo')
+        today_jst = datetime.now(jst)
+        
         return {
             "success": True,
             "data": {
                 "events": events,
-                "date": datetime.now().strftime("%Y-%m-%d"),
+                "date": today_jst.strftime("%Y-%m-%d"),
                 "count": len(events)
             },
             "source": "icloud"
@@ -80,14 +85,18 @@ async def get_today_events() -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"Failed to fetch today's events: {e}")
-        # エラー時はモックデータを返す
-        today = datetime.now().strftime("%Y-%m-%d")
+        # エラー時はモックデータを返す（日本時間使用）
+        import pytz
+        jst = pytz.timezone('Asia/Tokyo')
+        today_jst = datetime.now(jst)
+        today_str = today_jst.strftime("%Y-%m-%d")
+        
         mock_events = [
             {
                 "id": "fallback_event_1",
                 "title": "カレンダー接続エラー",
-                "start": f"{today}T09:00:00",
-                "end": f"{today}T10:00:00",
+                "start": f"{today_str}T09:00:00",
+                "end": f"{today_str}T10:00:00",
                 "location": "システム",
                 "description": "iCloudカレンダーへの接続に失敗しました",
                 "color": "#ef4444"
@@ -98,7 +107,7 @@ async def get_today_events() -> Dict[str, Any]:
             "success": False,
             "data": {
                 "events": mock_events,
-                "date": today,
+                "date": today_str,
                 "count": len(mock_events)
             },
             "source": "fallback",
