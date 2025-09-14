@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # 共通ライブラリをインストール
-COPY requirements.txt .
+COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリケーションコードをコピー
