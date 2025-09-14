@@ -38,7 +38,7 @@ class ICloudCalendarService:
         
         # キャッシュ設定
         self.cache_dir = "/tmp/calendar_cache"
-        self.cache_duration = 300  # 5分間キャッシュ
+        self.cache_duration = 60  # 1分間キャッシュ（短縮）
         self._ensure_cache_dir()
         
         # HTTPセッション設定
