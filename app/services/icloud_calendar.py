@@ -14,6 +14,7 @@ import pytz
 from dateutil import parser as date_parser
 import json
 import os
+from .japanese_holidays import JapaneseHolidaysService
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,9 @@ class ICloudCalendarService:
             "#f59e0b",  # オレンジ
             "#8b5cf6"   # 紫
         ]
+        
+        # 日本の祝日サービスを初期化
+        self.holidays_service = JapaneseHolidaysService()
         
         # キャッシュ設定
         self.cache_dir = "/tmp/calendar_cache"
@@ -292,7 +296,7 @@ class ICloudCalendarService:
             return None
 
     async def get_month_events(self, year: int, month: int) -> List[Dict[str, Any]]:
-        """指定された月のイベントを取得"""
+        """指定された月のイベントを取得（日本の祝日も含む）"""
         from calendar import monthrange
         
         # 月の最初の日と最後の日を取得
@@ -300,16 +304,50 @@ class ICloudCalendarService:
         last_day_num = monthrange(year, month)[1]
         last_day = datetime(year, month, last_day_num, 23, 59, 59)
         
-        return await self.get_all_events(first_day, last_day)
+        # iCloudカレンダーからイベントを取得
+        calendar_events = await self.get_all_events(first_day, last_day)
+        
+        # 日本の祝日を取得
+        try:
+            holidays = self.holidays_service.get_holidays_for_month(year, month)
+            logger.info(f"Added {len(holidays)} Japanese holidays for {year}/{month}")
+        except Exception as e:
+            logger.error(f"Failed to get Japanese holidays: {e}")
+            holidays = []
+        
+        # イベントと祝日を統合
+        all_events = calendar_events + holidays
+        
+        # 日付順にソート
+        all_events.sort(key=lambda x: x.get('start', ''))
+        
+        return all_events
 
     async def get_day_events(self, year: int, month: int, day: int) -> List[Dict[str, Any]]:
-        """指定された日のイベントを取得"""
+        """指定された日のイベントを取得（日本の祝日も含む）"""
         start_date = datetime(year, month, day, 0, 0, 0)
         end_date = datetime(year, month, day, 23, 59, 59)
         
-        return await self.get_all_events(start_date, end_date)
+        # iCloudカレンダーからイベントを取得
+        calendar_events = await self.get_all_events(start_date, end_date)
+        
+        # 日本の祝日を取得
+        try:
+            holidays = self.holidays_service.get_holidays_for_day(year, month, day)
+            logger.info(f"Added {len(holidays)} Japanese holidays for {year}/{month}/{day}")
+        except Exception as e:
+            logger.error(f"Failed to get Japanese holidays: {e}")
+            holidays = []
+        
+        # イベントと祝日を統合
+        all_events = calendar_events + holidays
+        
+        # 時間順にソート
+        all_events.sort(key=lambda x: x.get('start', ''))
+        
+        return all_events
 
     async def get_today_events(self) -> List[Dict[str, Any]]:
-        """今日のイベントを取得"""
+        """今日のイベントを取得（日本の祝日も含む）"""
         today = datetime.now()
         return await self.get_day_events(today.year, today.month, today.day)
