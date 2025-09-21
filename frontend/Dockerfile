@@ -5,6 +5,15 @@ WORKDIR /app
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
+# Python と pip をインストール
+RUN apk add --no-cache python3 py3-pip
+
+# 依存関係をインストール
+COPY package*.json ./
+RUN npm install
+
+# requirements-pi.txt をインストール
+COPY requirements-pi.txt ./
 RUN pip install --no-cache-dir --no-binary :all: -r requirements-pi.txt
 
 # 依存関係をインストール
