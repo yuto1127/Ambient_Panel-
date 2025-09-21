@@ -5,6 +5,8 @@ WORKDIR /app
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
+RUN pip install --no-cache-dir --no-binary :all: -r requirements-pi.txt
+
 # 依存関係をインストール
 RUN npm install
 
