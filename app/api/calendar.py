@@ -232,8 +232,76 @@ def generate_mock_month_events(year: int, month: int) -> List[Dict[str, Any]]:
     import random
     random.seed(year * 100 + month)  # 同じ月は同じイベントを生成
     
+    # 祝日データを追加（2025年の祝日）
+    holidays_2025 = {
+        1: [1],  # 元日
+        2: [11, 12],  # 建国記念の日、建国記念の日振替休日
+        3: [20],  # 春分の日
+        4: [29],  # 昭和の日
+        5: [3, 4, 5, 6],  # 憲法記念日、みどりの日、こどもの日、こどもの日振替休日
+        7: [21],  # 海の日
+        8: [11],  # 山の日
+        9: [15, 22, 23],  # 敬老の日、秋分の日、秋分の日振替休日
+        10: [13, 14],  # スポーツの日、スポーツの日振替休日
+        11: [3, 23],  # 文化の日、勤労感謝の日
+        12: [23]  # 天皇誕生日
+    }
+    
+    holiday_names = {
+        1: "元日",
+        2: "建国記念の日",
+        3: "春分の日", 
+        4: "昭和の日",
+        5: ["憲法記念日", "みどりの日", "こどもの日"],
+        7: "海の日",
+        8: "山の日",
+        9: ["敬老の日", "秋分の日"],
+        10: "スポーツの日",
+        11: ["文化の日", "勤労感謝の日"],
+        12: "天皇誕生日"
+    }
+    
     for day in range(1, days_in_month + 1):
-        # 30%の確率でイベントを生成
+        # 祝日を追加
+        if month in holidays_2025 and day in holidays_2025[month]:
+            holiday_name = holiday_names[month]
+            if isinstance(holiday_name, list):
+                # 複数の祝日がある場合（5月、9月、11月）
+                holiday_index = holidays_2025[month].index(day)
+                holiday_name = holiday_name[holiday_index] if holiday_index < len(holiday_name) else holiday_name[0]
+            
+            events.append({
+                "id": f"holiday_{year}_{month}_{day}",
+                "title": holiday_name,
+                "start": f"{year}-{month:02d}-{day:02d}",
+                "end": f"{year}-{month:02d}-{day:02d}",
+                "all_day": True,
+                "location": "",
+                "description": f"日本の祝日: {holiday_name}",
+                "color": "#ff6b6b",
+                "source": "japanese_holidays"
+            })
+        
+        # 終日イベントを追加（10%の確率）
+        if random.random() < 0.1:
+            all_day_titles = [
+                "会社休業日", "研修日", "イベント開催日", "記念日",
+                "特別休暇", "メンテナンス日", "システム停止日"
+            ]
+            
+            events.append({
+                "id": f"allday_{year}_{month}_{day}",
+                "title": random.choice(all_day_titles),
+                "start": f"{year}-{month:02d}-{day:02d}T00:00:00",
+                "end": f"{year}-{month:02d}-{day:02d}T23:59:59",
+                "all_day": True,
+                "location": "",
+                "description": f"{random.choice(all_day_titles)}の詳細",
+                "color": "#8b5cf6",
+                "source": "icloud"
+            })
+        
+        # 通常の時間指定イベントを生成（30%の確率）
         if random.random() < 0.3:
             num_events = random.randint(1, 3)
             for i in range(num_events):
@@ -262,7 +330,8 @@ def generate_mock_month_events(year: int, month: int) -> List[Dict[str, Any]]:
                     "end": end_time.strftime("%Y-%m-%dT%H:%M:%S"),
                     "location": random.choice(event_locations),
                     "description": f"{random.choice(event_titles)}の詳細",
-                    "color": random.choice(colors)
+                    "color": random.choice(colors),
+                    "source": "icloud"
                 })
     
     return events
@@ -272,9 +341,61 @@ def generate_mock_day_events(year: int, month: int, day: int) -> List[Dict[str, 
     target_date = datetime(year, month, day)
     today = datetime.now()
     
+    events = []
+    colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+    
+    # 祝日データを追加（2025年の祝日）
+    holidays_2025 = {
+        1: [1],  # 元日
+        2: [11, 12],  # 建国記念の日、建国記念の日振替休日
+        3: [20],  # 春分の日
+        4: [29],  # 昭和の日
+        5: [3, 4, 5, 6],  # 憲法記念日、みどりの日、こどもの日、こどもの日振替休日
+        7: [21],  # 海の日
+        8: [11],  # 山の日
+        9: [15, 22, 23],  # 敬老の日、秋分の日、秋分の日振替休日
+        10: [13, 14],  # スポーツの日、スポーツの日振替休日
+        11: [3, 23],  # 文化の日、勤労感謝の日
+        12: [23]  # 天皇誕生日
+    }
+    
+    holiday_names = {
+        1: "元日",
+        2: "建国記念の日",
+        3: "春分の日", 
+        4: "昭和の日",
+        5: ["憲法記念日", "みどりの日", "こどもの日"],
+        7: "海の日",
+        8: "山の日",
+        9: ["敬老の日", "秋分の日"],
+        10: "スポーツの日",
+        11: ["文化の日", "勤労感謝の日"],
+        12: "天皇誕生日"
+    }
+    
+    # 祝日を追加
+    if month in holidays_2025 and day in holidays_2025[month]:
+        holiday_name = holiday_names[month]
+        if isinstance(holiday_name, list):
+            # 複数の祝日がある場合（5月、9月、11月）
+            holiday_index = holidays_2025[month].index(day)
+            holiday_name = holiday_name[holiday_index] if holiday_index < len(holiday_name) else holiday_name[0]
+        
+        events.append({
+            "id": f"holiday_{year}_{month}_{day}",
+            "title": holiday_name,
+            "start": f"{year}-{month:02d}-{day:02d}",
+            "end": f"{year}-{month:02d}-{day:02d}",
+            "all_day": True,
+            "location": "",
+            "description": f"日本の祝日: {holiday_name}",
+            "color": "#ff6b6b",
+            "source": "japanese_holidays"
+        })
+    
     # 今日の場合は既存のモックデータを使用
     if target_date.date() == today.date():
-        return [
+        events.extend([
             {
                 "id": "today_event_1",
                 "title": "朝のミーティング",
@@ -282,7 +403,8 @@ def generate_mock_day_events(year: int, month: int, day: int) -> List[Dict[str, 
                 "end": f"{target_date.strftime('%Y-%m-%d')}T10:00:00",
                 "location": "会議室B",
                 "description": "日次ミーティング",
-                "color": "#3b82f6"
+                "color": "#3b82f6",
+                "source": "icloud"
             },
             {
                 "id": "today_event_2",
@@ -291,18 +413,37 @@ def generate_mock_day_events(year: int, month: int, day: int) -> List[Dict[str, 
                 "end": f"{target_date.strftime('%Y-%m-%d')}T15:30:00",
                 "location": "会議室A",
                 "description": "四半期レビュー",
-                "color": "#ef4444"
+                "color": "#ef4444",
+                "source": "icloud"
             }
-        ]
+        ])
+        return events
     
     # 他の日はランダムに生成
     import random
     random.seed(year * 10000 + month * 100 + day)
     
-    events = []
-    colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+    # 終日イベントを追加（20%の確率）
+    if random.random() < 0.2:
+        all_day_titles = [
+            "会社休業日", "研修日", "イベント開催日", "記念日",
+            "特別休暇", "メンテナンス日", "システム停止日"
+        ]
+        
+        events.append({
+            "id": f"allday_{year}_{month}_{day}",
+            "title": random.choice(all_day_titles),
+            "start": f"{year}-{month:02d}-{day:02d}T00:00:00",
+            "end": f"{year}-{month:02d}-{day:02d}T23:59:59",
+            "all_day": True,
+            "location": "",
+            "description": f"{random.choice(all_day_titles)}の詳細",
+            "color": "#8b5cf6",
+            "source": "icloud"
+        })
     
-    if random.random() < 0.4:  # 40%の確率でイベントを生成
+    # 通常の時間指定イベントを生成（40%の確率）
+    if random.random() < 0.4:
         num_events = random.randint(1, 2)
         for i in range(num_events):
             hour = random.randint(9, 17)
@@ -328,7 +469,8 @@ def generate_mock_day_events(year: int, month: int, day: int) -> List[Dict[str, 
                 "end": end_time.strftime("%Y-%m-%dT%H:%M:%S"),
                 "location": random.choice(event_locations),
                 "description": f"{random.choice(event_titles)}の詳細",
-                "color": random.choice(colors)
+                "color": random.choice(colors),
+                "source": "icloud"
             })
     
     return events
