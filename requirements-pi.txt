@@ -3,6 +3,7 @@ adafruit-circuitpython-scd4x==1.0.0
 adafruit-circuitpython-busdevice==5.2.13
 adafruit-circuitpython-register==1.9.16
 adafruit-blinka
+lgpio
 
 # 全環境共通のライブラリ
 fastapi==0.104.1

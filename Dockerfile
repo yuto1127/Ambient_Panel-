@@ -5,6 +5,9 @@ FROM python:3.11-slim AS base
 RUN apt-get update && apt-get install -y \
     i2c-tools \
     libi2c-dev \
+    gcc \
+    g++ \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1

@@ -9,29 +9,6 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Install gcc and other required packages
-FROM python:3.11-slim
-
-# Install system dependencies for building
-RUN apk update && apk add --no-cache \
-    gcc \
-    g++ \
-    make \
-    i2c-tools \
-    libi2c-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install required Python packages
-WORKDIR /app
-COPY requirements-pi.txt .
-RUN pip install --no-cache-dir -r requirements-pi.txt
-
-# Copy the application code
-COPY . .
-
-# Expose the port and define the entrypoint
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
-
 # Copy the source code
 COPY . .
 
