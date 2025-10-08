@@ -1,6 +1,7 @@
 """
-SCD40環境センサー（CO2、温度、湿度）の統合
+SD40環境センサー（CO2、温度、湿度）の統合
 Raspberry Pi環境と開発環境の両方に対応
+Adafruit CircuitPythonライブラリを使用
 """
 
 import logging
@@ -15,13 +16,13 @@ IS_RASPBERRY_PI = detect_environment()
 
 if IS_RASPBERRY_PI:
     try:
-        # Raspberry Pi環境の場合、本物のライブラリをインポート
+        # Raspberry Pi環境の場合、Adafruit CircuitPythonライブラリをインポート
         import board
         import busio
         from adafruit_scd4x import SCD4X
-        logger.info("✅ Real SCD4X sensor library loaded.")
+        logger.info("✅ Adafruit CircuitPython SCD4X library loaded.")
     except ImportError as e:
-        logger.error(f"❌ Error: SCD4X library not found on Raspberry Pi: {e}")
+        logger.error(f"❌ Error: Adafruit CircuitPython library not found on Raspberry Pi: {e}")
         raise
 else:
     # Mac/PC環境の場合、ダミー（モック）のクラスを定義
@@ -71,7 +72,8 @@ else:
     
     # モック用のboardとbusio
     class MockBoard:
-        I2C = "mock_i2c"
+        SCL = "mock_scl"
+        SDA = "mock_sda"
     
     class MockBusio:
         def I2C(self, *args, **kwargs):
@@ -81,11 +83,14 @@ else:
     busio = MockBusio()
 
 class EnvironmentSensor:
-    """環境センサー管理クラス"""
+    """SCD4X環境センサー管理クラス"""
     
     def __init__(self):
         self.sensor: Optional[SCD4X] = None
         self.is_initialized = False
+        self.last_data = None
+        self.last_update_time = None
+        self.cache_duration = 10  # 10秒間キャッシュ
         self._initialize_sensor()
     
     def _initialize_sensor(self):
@@ -112,10 +117,10 @@ class EnvironmentSensor:
     
     def get_environment_data(self) -> Dict[str, float]:
         """
-        環境データを取得する
+        SCD4Xセンサーから環境データを取得する（キャッシュ機能付き）
         
         Returns:
-            Dict[str, float]: 環境データの辞書
+            Dict[str, float]: 環境データの辞書（温度、湿度、CO2濃度）
         """
         if not self.is_initialized or not self.sensor:
             return {
@@ -125,9 +130,20 @@ class EnvironmentSensor:
                 "error": "Sensor not initialized"
             }
         
+        # キャッシュされたデータがあるかチェック
+        current_time = time.time()
+        if (self.last_data and self.last_update_time and 
+            current_time - self.last_update_time < self.cache_duration):
+            logger.debug("Using cached environment data")
+            return self.last_data
+        
         try:
             # データが準備できているかチェック
             if not self.sensor.data_ready:
+                # キャッシュされたデータがあれば返す
+                if self.last_data:
+                    logger.debug("Data not ready, using cached data")
+                    return self.last_data
                 return {
                     "temperature": 0.0,
                     "humidity": 0.0,
@@ -139,14 +155,23 @@ class EnvironmentSensor:
             data = {
                 "temperature": round(self.sensor.temperature, 1),
                 "humidity": round(self.sensor.relative_humidity, 1),
-                "co2": int(self.sensor.co2)
+                "co2": int(self.sensor.CO2),
+                "timestamp": current_time
             }
             
-            logger.debug(f"Environment data: {data}")
+            # キャッシュを更新
+            self.last_data = data
+            self.last_update_time = current_time
+            
+            logger.debug(f"SCD4X Environment data: {data}")
             return data
             
         except Exception as e:
-            logger.error(f"❌ Error reading environment data: {e}")
+            logger.error(f"❌ Error reading SCD4X environment data: {e}")
+            # エラー時はキャッシュされたデータがあれば返す
+            if self.last_data:
+                logger.debug("Error occurred, using cached data")
+                return self.last_data
             return {
                 "temperature": 0.0,
                 "humidity": 0.0,
@@ -156,7 +181,7 @@ class EnvironmentSensor:
     
     def get_sensor_status(self) -> Dict[str, any]:
         """
-        センサーの状態を取得する
+        SCD4Xセンサーの状態を取得する
         
         Returns:
             Dict[str, any]: センサー状態の辞書
@@ -165,7 +190,10 @@ class EnvironmentSensor:
             "is_initialized": self.is_initialized,
             "is_raspberry_pi": IS_RASPBERRY_PI,
             "sensor_type": "SCD4X",
-            "status": "active" if self.is_initialized else "inactive"
+            "status": "active" if self.is_initialized else "inactive",
+            "cache_duration": self.cache_duration,
+            "last_update": self.last_update_time,
+            "has_cached_data": self.last_data is not None
         }
 
 # グローバルインスタンス

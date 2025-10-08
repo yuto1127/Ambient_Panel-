@@ -349,7 +349,46 @@ class ICloudCalendarService:
 
     async def get_today_events(self) -> List[Dict[str, Any]]:
         """今日のイベントを取得（日本の祝日も含む）"""
-        # 日本時間（JST）で今日の日付を取得
-        jst = pytz.timezone('Asia/Tokyo')
-        today = datetime.now(jst)
-        return await self.get_day_events(today.year, today.month, today.day)
+        try:
+            # 日本時間（JST）で今日の日付を取得
+            jst = pytz.timezone('Asia/Tokyo')
+            today = datetime.now(jst)
+            
+            # まず日本の祝日を取得
+            try:
+                holidays = self.holidays_service.get_holidays_for_day(today.year, today.month, today.day)
+                logger.info(f"Added {len(holidays)} Japanese holidays for today")
+            except Exception as e:
+                logger.error(f"Failed to get Japanese holidays: {e}")
+                holidays = []
+            
+            # iCloudカレンダーからイベントを取得（タイムアウトを短縮）
+            try:
+                start_date = datetime(today.year, today.month, today.day, 0, 0, 0)
+                end_date = datetime(today.year, today.month, today.day, 23, 59, 59)
+                
+                # 短時間でタイムアウトするように設定
+                calendar_events = await asyncio.wait_for(
+                    self.get_all_events(start_date, end_date), 
+                    timeout=5.0  # 5秒でタイムアウト
+                )
+                logger.info(f"Retrieved {len(calendar_events)} calendar events for today")
+            except asyncio.TimeoutError:
+                logger.warning("Timeout fetching iCloud calendar events")
+                calendar_events = []
+            except Exception as e:
+                logger.error(f"Failed to fetch iCloud calendar events: {e}")
+                calendar_events = []
+            
+            # イベントと祝日を統合
+            all_events = calendar_events + holidays
+            
+            # 時間順にソート
+            all_events.sort(key=lambda x: x.get('start', ''))
+            
+            logger.info(f"Total events for today: {len(all_events)}")
+            return all_events
+            
+        except Exception as e:
+            logger.error(f"Error in get_today_events: {e}")
+            return []

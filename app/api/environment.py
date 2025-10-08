@@ -21,14 +21,20 @@ async def get_environment_data() -> Dict[str, Any]:
         Dict[str, Any]: 環境データ（温度、湿度、CO2濃度）
     """
     try:
+        logger.info("🔍 API: Getting environment data...")
         data = environment_sensor.get_environment_data()
-        return {
+        logger.info(f"📊 API: Environment data retrieved: {data}")
+        
+        response = {
             "success": True,
-            "data": data,
-            "timestamp": data.get("timestamp")
+            "data": data
         }
+        
+        logger.info(f"✅ API: Returning response: {response}")
+        return response
+        
     except Exception as e:
-        logger.error(f"Error getting environment data: {e}")
+        logger.error(f"❌ API: Error getting environment data: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get environment data: {str(e)}")
 
 @router.get("/status")
@@ -40,11 +46,18 @@ async def get_sensor_status() -> Dict[str, Any]:
         Dict[str, Any]: センサー状態情報
     """
     try:
+        logger.info("🔍 API: Getting sensor status...")
         status = environment_sensor.get_sensor_status()
-        return {
+        logger.info(f"📊 API: Sensor status retrieved: {status}")
+        
+        response = {
             "success": True,
             "status": status
         }
+        
+        logger.info(f"✅ API: Returning status response: {response}")
+        return response
+        
     except Exception as e:
-        logger.error(f"Error getting sensor status: {e}")
+        logger.error(f"❌ API: Error getting sensor status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get sensor status: {str(e)}")

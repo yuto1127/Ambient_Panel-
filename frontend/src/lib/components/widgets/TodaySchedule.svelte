@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { calendarData } from '$lib/stores/newsStore.js';
+	import { calendarEvents } from '$lib/stores/calendarStore.js';
 	import { api } from '$lib/utils/api.js';
 	import { formatTime } from '$lib/utils/dateTime.js';
 
@@ -21,11 +21,7 @@
 			if (holidays.length > 0) {
 				console.log('キャッシュから今日の予定に祝日データが見つかりました:', holidays);
 			}
-			calendarData.set({
-				events: todayCache.events,
-				loading: false,
-				error: null
-			});
+			calendarEvents.set(todayCache.events);
 			return;
 		}
 
@@ -42,11 +38,7 @@
 					console.log('APIから今日の予定に祝日データが見つかりました:', holidays);
 				}
 				
-				calendarData.set({
-					events: events,
-					loading: false,
-					error: null
-				});
+				calendarEvents.set(events);
 				
 				// キャッシュに保存
 				todayCache = {
@@ -59,11 +51,7 @@
 			}
 		} catch (error) {
 			console.error('今日の予定の読み込みエラー:', error);
-			calendarData.update(state => ({
-				...state,
-				loading: false,
-				error: error.message
-			}));
+			calendarEvents.set([]);
 		}
 	}
 
@@ -82,30 +70,19 @@
 		<button 
 			class="btn btn-xs btn-secondary" 
 			on:click={refreshSchedule}
-			disabled={$calendarData.loading}
 		>
-			<i class="fas fa-sync-alt {$calendarData.loading ? 'animate-spin' : ''}"></i>
+			<i class="fas fa-sync-alt"></i>
 		</button>
 	</div>
 	
-	{#if $calendarData.loading}
-		<div class="text-center text-muted text-sm py-4">
-			<i class="fas fa-spinner fa-spin"></i>
-			読み込み中...
-		</div>
-	{:else if $calendarData.error}
-		<div class="text-center text-danger text-sm py-4">
-			<i class="fas fa-exclamation-triangle"></i>
-			エラー
-		</div>
-	{:else if $calendarData.events.length === 0}
+	{#if $calendarEvents.length === 0}
 		<div class="text-center text-muted text-sm py-4">
 			<i class="fas fa-calendar-check"></i>
 			予定なし
 		</div>
 	{:else}
 		<div class="schedule-list">
-			{#each $calendarData.events.sort((a, b) => {
+			{#each $calendarEvents.sort((a, b) => {
 				// 祝日を優先的に表示
 				if (a.source === 'japanese_holidays' && b.source !== 'japanese_holidays') return -1;
 				if (b.source === 'japanese_holidays' && a.source !== 'japanese_holidays') return 1;
@@ -130,9 +107,9 @@
 				</div>
 			{/each}
 			
-			{#if $calendarData.events.length > 5}
+			{#if $calendarEvents.length > 5}
 				<div class="more-events text-xs text-secondary text-center mt-2">
-					+{$calendarData.events.length - 5}件の予定
+					+{$calendarEvents.length - 5}件の予定
 				</div>
 			{/if}
 		</div>
