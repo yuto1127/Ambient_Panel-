@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { calendarEvents } from '$lib/stores/calendarStore.js';
+	import { todayEvents } from '$lib/stores/calendarStore.js';
 	import { api } from '$lib/utils/api.js';
 	import { formatTime } from '$lib/utils/dateTime.js';
 
@@ -8,10 +8,10 @@
 	let lastCacheTime = 0;
 
 	onMount(async () => {
-		await loadCalendarEvents();
+		await loadTodayEvents();
 	});
 
-	async function loadCalendarEvents() {
+	async function loadTodayEvents() {
 		const today = new Date().toDateString();
 		
 		// キャッシュをチェック（1分間有効）
@@ -21,7 +21,7 @@
 			if (holidays.length > 0) {
 				console.log('キャッシュから今日の予定に祝日データが見つかりました:', holidays);
 			}
-			calendarEvents.set(todayCache.events);
+			todayEvents.set(todayCache.events);
 			return;
 		}
 
@@ -32,13 +32,18 @@
 				const events = data.data.events;
 				console.log(`今日の予定数: ${events.length}`);
 				
+				// 各イベントの日付を確認
+				events.forEach(event => {
+					console.log(`イベント: ${event.title} - 日付: ${event.start}`);
+				});
+				
 				// 祝日データをデバッグ
 				const holidays = events.filter(event => event.source === 'japanese_holidays');
 				if (holidays.length > 0) {
 					console.log('APIから今日の予定に祝日データが見つかりました:', holidays);
 				}
 				
-				calendarEvents.set(events);
+				todayEvents.set(events);
 				
 				// キャッシュに保存
 				todayCache = {
@@ -51,7 +56,7 @@
 			}
 		} catch (error) {
 			console.error('今日の予定の読み込みエラー:', error);
-			calendarEvents.set([]);
+			todayEvents.set([]);
 		}
 	}
 
@@ -60,7 +65,7 @@
 		todayCache = null;
 		lastCacheTime = 0;
 		// データを再読み込み
-		await loadCalendarEvents();
+		await loadTodayEvents();
 	}
 </script>
 
@@ -75,14 +80,14 @@
 		</button>
 	</div>
 	
-	{#if $calendarEvents.length === 0}
+	{#if $todayEvents.length === 0}
 		<div class="text-center text-muted text-sm py-4">
 			<i class="fas fa-calendar-check"></i>
 			予定なし
 		</div>
 	{:else}
 		<div class="schedule-list">
-			{#each $calendarEvents.sort((a, b) => {
+			{#each $todayEvents.sort((a, b) => {
 				// 祝日を優先的に表示
 				if (a.source === 'japanese_holidays' && b.source !== 'japanese_holidays') return -1;
 				if (b.source === 'japanese_holidays' && a.source !== 'japanese_holidays') return 1;
@@ -107,9 +112,9 @@
 				</div>
 			{/each}
 			
-			{#if $calendarEvents.length > 5}
+			{#if $todayEvents.length > 5}
 				<div class="more-events text-xs text-secondary text-center mt-2">
-					+{$calendarEvents.length - 5}件の予定
+					+{$todayEvents.length - 5}件の予定
 				</div>
 			{/if}
 		</div>

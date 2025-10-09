@@ -8,8 +8,11 @@ export const calendarView = writable({
 	view: 'month' // 'month' or 'day'
 });
 
-// カレンダーイベントデータ
+// カレンダーイベントデータ（月表示用）
 export const calendarEvents = writable([]);
+
+// 今日の予定データ（左側ウィジェット用）
+export const todayEvents = writable([]);
 
 // 選択された日のイベント
 export const selectedDayEvents = writable([]);

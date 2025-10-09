@@ -277,14 +277,26 @@ class ICloudCalendarService:
                                     start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
         """カレンダーからイベントを抽出"""
         events = []
+        jst = pytz.timezone('Asia/Tokyo')
         
         for component in calendar.walk('VEVENT'):
             event = self.parse_event(component, calendar_index)
             if event:
                 # 日付範囲内のイベントのみを追加
                 event_start = self._parse_datetime_string(event['start'])
-                if event_start and start_date <= event_start <= end_date:
-                    events.append(event)
+                if event_start:
+                    # タイムゾーン情報がない場合は日本時間として扱う
+                    if event_start.tzinfo is None:
+                        event_start = jst.localize(event_start)
+                    else:
+                        event_start = event_start.astimezone(jst)
+                    
+                    # start_dateとend_dateもタイムゾーン情報があることを確認
+                    compare_start = start_date if start_date.tzinfo else jst.localize(start_date)
+                    compare_end = end_date if end_date.tzinfo else jst.localize(end_date)
+                    
+                    if compare_start <= event_start <= compare_end:
+                        events.append(event)
                     
         return events
 
@@ -299,10 +311,11 @@ class ICloudCalendarService:
         """指定された月のイベントを取得（日本の祝日も含む）"""
         from calendar import monthrange
         
-        # 月の最初の日と最後の日を取得
-        first_day = datetime(year, month, 1)
+        # 日本時間で月の最初の日と最後の日を取得
+        jst = pytz.timezone('Asia/Tokyo')
+        first_day = jst.localize(datetime(year, month, 1, 0, 0, 0))
         last_day_num = monthrange(year, month)[1]
-        last_day = datetime(year, month, last_day_num, 23, 59, 59)
+        last_day = jst.localize(datetime(year, month, last_day_num, 23, 59, 59))
         
         # iCloudカレンダーからイベントを取得
         calendar_events = await self.get_all_events(first_day, last_day)
@@ -325,11 +338,23 @@ class ICloudCalendarService:
 
     async def get_day_events(self, year: int, month: int, day: int) -> List[Dict[str, Any]]:
         """指定された日のイベントを取得（日本の祝日も含む）"""
-        start_date = datetime(year, month, day, 0, 0, 0)
-        end_date = datetime(year, month, day, 23, 59, 59)
+        # 日本時間でタイムゾーン情報を含めて日付範囲を設定
+        jst = pytz.timezone('Asia/Tokyo')
+        start_date = jst.localize(datetime(year, month, day, 0, 0, 0))
+        end_date = jst.localize(datetime(year, month, day, 23, 59, 59))
         
         # iCloudカレンダーからイベントを取得
         calendar_events = await self.get_all_events(start_date, end_date)
+        
+        # 指定された日のイベントのみをフィルタリング（念のため再確認）
+        target_date_str = f"{year:04d}-{month:02d}-{day:02d}"
+        filtered_events = []
+        for event in calendar_events:
+            event_date_str = event['start'][:10]  # YYYY-MM-DD部分を取得
+            if event_date_str == target_date_str:
+                filtered_events.append(event)
+        
+        calendar_events = filtered_events
         
         # 日本の祝日を取得
         try:
@@ -353,6 +378,9 @@ class ICloudCalendarService:
             # 日本時間（JST）で今日の日付を取得
             jst = pytz.timezone('Asia/Tokyo')
             today = datetime.now(jst)
+            today_date_str = today.strftime('%Y-%m-%d')
+            
+            logger.info(f"Getting events for today: {today_date_str}")
             
             # まず日本の祝日を取得
             try:
@@ -364,15 +392,32 @@ class ICloudCalendarService:
             
             # iCloudカレンダーからイベントを取得（タイムアウトを短縮）
             try:
-                start_date = datetime(today.year, today.month, today.day, 0, 0, 0)
-                end_date = datetime(today.year, today.month, today.day, 23, 59, 59)
+                # キャッシュを無効化するため、直接カレンダーデータを取得
+                logger.info(f"Fetching events directly from {len(self.calendar_urls)} calendars for today")
                 
-                # 短時間でタイムアウトするように設定
-                calendar_events = await asyncio.wait_for(
-                    self.get_all_events(start_date, end_date), 
-                    timeout=5.0  # 5秒でタイムアウト
+                # 並列処理でカレンダーデータを取得
+                tasks = []
+                for i, url in enumerate(self.calendar_urls):
+                    task = self._fetch_calendar_for_today(url, i, today_date_str)
+                    tasks.append(task)
+                
+                # すべてのタスクを並列実行（5秒でタイムアウト）
+                results = await asyncio.wait_for(
+                    asyncio.gather(*tasks, return_exceptions=True),
+                    timeout=5.0
                 )
-                logger.info(f"Retrieved {len(calendar_events)} calendar events for today")
+                
+                calendar_events = []
+                for i, result in enumerate(results):
+                    if isinstance(result, Exception):
+                        logger.error(f"Error processing calendar {i+1}: {result}")
+                        continue
+                    if result:
+                        calendar_events.extend(result)
+                        logger.info(f"Calendar {i+1}: {len(result)} events for today")
+                
+                logger.info(f"Total calendar events for today: {len(calendar_events)}")
+                
             except asyncio.TimeoutError:
                 logger.warning("Timeout fetching iCloud calendar events")
                 calendar_events = []
@@ -391,4 +436,26 @@ class ICloudCalendarService:
             
         except Exception as e:
             logger.error(f"Error in get_today_events: {e}")
+            return []
+    
+    async def _fetch_calendar_for_today(self, url: str, calendar_index: int, today_date_str: str) -> List[Dict[str, Any]]:
+        """今日のイベントのみを取得"""
+        try:
+            calendar = await self.fetch_calendar_data(url)
+            if not calendar:
+                return []
+            
+            events = []
+            for component in calendar.walk('VEVENT'):
+                event = self.parse_event(component, calendar_index)
+                if event:
+                    # 日付部分のみを比較（YYYY-MM-DD）
+                    event_date_str = event['start'][:10]
+                    if event_date_str == today_date_str:
+                        events.append(event)
+                        logger.info(f"Found event for today: {event.get('title')} at {event.get('start')}")
+                    
+            return events
+        except Exception as e:
+            logger.error(f"Error fetching calendar {calendar_index+1} for today: {e}")
             return []
