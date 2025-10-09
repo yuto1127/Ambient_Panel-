@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-export const currentTab = writable('spotify');
+export const currentTab = writable('calendar');
 
 export const tabs = [
 	{ id: 'calendar', label: 'Calendar', icon: 'fas fa-calendar' },
