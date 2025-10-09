@@ -186,51 +186,99 @@
 				<div class="modal-body">
 					<div class="settings-grid">
 						<div class="setting-group">
-							<label for="work-time">作業時間（分）</label>
-							<input 
-								id="work-time"
-								type="number" 
-								bind:value={settings.workTime} 
-								min="1" 
-								max="60"
-								class="form-input"
-							/>
+							<label>作業時間（分）</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.workTime = Math.max(1, settings.workTime - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={settings.workTime} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.workTime = Math.min(60, settings.workTime + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 						
 						<div class="setting-group">
-							<label for="break-time">休憩時間（分）</label>
-							<input 
-								id="break-time"
-								type="number" 
-								bind:value={settings.breakTime} 
-								min="1" 
-								max="30"
-								class="form-input"
-							/>
+							<label>休憩時間（分）</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.breakTime = Math.max(1, settings.breakTime - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={settings.breakTime} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.breakTime = Math.min(30, settings.breakTime + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 						
 						<div class="setting-group">
-							<label for="long-break-time">長い休憩時間（分）</label>
-							<input 
-								id="long-break-time"
-								type="number" 
-								bind:value={settings.longBreakTime} 
-								min="1" 
-								max="60"
-								class="form-input"
-							/>
+							<label>長い休憩時間（分）</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.longBreakTime = Math.max(1, settings.longBreakTime - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={settings.longBreakTime} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.longBreakTime = Math.min(60, settings.longBreakTime + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 						
 						<div class="setting-group">
-							<label for="sessions">セッション数</label>
-							<input 
-								id="sessions"
-								type="number" 
-								bind:value={settings.sessions} 
-								min="1" 
-								max="10"
-								class="form-input"
-							/>
+							<label>セッション数</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.sessions = Math.max(1, settings.sessions - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={settings.sessions} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => settings.sessions = Math.min(10, settings.sessions + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -299,10 +347,28 @@
 		color: var(--text-color);
 	}
 	
-	.setting-group input {
+	.input-controls {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.input-controls input {
+		width: 60px;
 		text-align: center;
 		font-size: 1.1rem;
 		font-weight: bold;
+		cursor: default;
+		user-select: none;
+	}
+	
+	.input-controls .btn {
+		padding: 0.5rem;
+		min-width: 35px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	
 	.btn-lg {

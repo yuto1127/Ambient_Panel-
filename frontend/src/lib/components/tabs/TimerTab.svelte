@@ -132,37 +132,73 @@
 				<div class="modal-body">
 					<div class="time-inputs">
 						<div class="time-input-group">
-							<label for="hours-input">時間</label>
-							<input 
-								id="hours-input"
-								type="number" 
-								bind:value={timeInput.hours} 
-								min="0" 
-								max="23"
-								class="form-input"
-							/>
+							<label>時間</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.hours = Math.max(0, timeInput.hours - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={timeInput.hours} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.hours = Math.min(23, timeInput.hours + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 						<div class="time-input-group">
-							<label for="minutes-input">分</label>
-							<input 
-								id="minutes-input"
-								type="number" 
-								bind:value={timeInput.minutes} 
-								min="0" 
-								max="59"
-								class="form-input"
-							/>
+							<label>分</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.minutes = Math.max(0, timeInput.minutes - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={timeInput.minutes} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.minutes = Math.min(59, timeInput.minutes + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 						<div class="time-input-group">
-							<label for="seconds-input">秒</label>
-							<input 
-								id="seconds-input"
-								type="number" 
-								bind:value={timeInput.seconds} 
-								min="0" 
-								max="59"
-								class="form-input"
-							/>
+							<label>秒</label>
+							<div class="input-controls">
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.seconds = Math.max(0, timeInput.seconds - 1)}
+								>
+									<i class="fas fa-minus"></i>
+								</button>
+								<input 
+									type="text" 
+									value={timeInput.seconds} 
+									readonly
+									class="form-input"
+								/>
+								<button 
+									class="btn btn-sm btn-secondary"
+									on:click={() => timeInput.seconds = Math.min(59, timeInput.seconds + 1)}
+								>
+									<i class="fas fa-plus"></i>
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -209,11 +245,27 @@
 		color: var(--text-color);
 	}
 	
-	.time-input-group input {
-		width: 80px;
+	.input-controls {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+	
+	.input-controls input {
+		width: 60px;
 		text-align: center;
 		font-size: 1.2rem;
 		font-weight: bold;
+		cursor: default;
+		user-select: none;
+	}
+	
+	.input-controls .btn {
+		padding: 0.5rem;
+		min-width: 35px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	
 	.btn-lg {
