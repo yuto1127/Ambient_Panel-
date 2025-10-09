@@ -60,7 +60,9 @@
 <div class="widget environment">
 	<div class="env-data">
 		{#if $environmentData.loading}
-			<div class="text-center text-secondary">読み込み中...</div>
+			<div class="text-center text-secondary">
+				<i class="fas fa-spinner fa-spin"></i>
+			</div>
 		{:else if $environmentData.error}
 			<div class="text-center text-red-500">
 				<div class="text-sm">エラー: {$environmentData.error}</div>

@@ -73,7 +73,7 @@
 	
 	<div class="text-center">
 		<!-- タイマー表示 -->
-		<div class="timer-display text-6xl font-bold text-primary font-mono mb-8">
+		<div class="timer-display font-bold text-primary font-mono mb-8">
 			{displayTime}
 		</div>
 		
@@ -218,7 +218,21 @@
 
 <style>
 	.timer-display {
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+		font-size: 3.5rem;
+		text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+		line-height: 1.2;
+	}
+	
+	@media (min-width: 768px) {
+		.timer-display {
+			font-size: 4.5rem;
+		}
+	}
+	
+	@media (min-width: 1024px) {
+		.timer-display {
+			font-size: 5.5rem;
+		}
 	}
 	
 	.timer-status p {
@@ -252,26 +266,37 @@
 	}
 	
 	.input-controls input {
-		width: 60px;
+		width: 80px;
 		text-align: center;
-		font-size: 1.2rem;
+		font-size: 1.5rem;
 		font-weight: bold;
 		cursor: default;
 		user-select: none;
+		padding: 0.75rem;
 	}
 	
 	.input-controls .btn {
-		padding: 0.5rem;
-		min-width: 35px;
+		padding: 0.75rem 1rem;
+		min-width: 45px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		font-size: 1.2rem;
+	}
+	
+	.input-controls .btn i {
+		font-size: 1.3rem;
 	}
 	
 	.btn-lg {
-		padding: 0.75rem 1.5rem;
-		font-size: 1.1rem;
-		min-width: 120px;
+		padding: 1rem 2rem;
+		font-size: 1.3rem;
+		min-width: 150px;
+	}
+	
+	.btn-lg i {
+		font-size: 1.5rem;
+		margin-right: 0.5rem;
 	}
 	
 </style>

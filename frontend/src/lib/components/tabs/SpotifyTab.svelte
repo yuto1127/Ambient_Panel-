@@ -79,10 +79,9 @@
 	{#if $playlists.loading}
 		<div class="flex flex-center" style="height: 200px;">
 			<div class="text-center">
-				<div class="text-2xl mb-4">
+				<div class="text-2xl">
 					<i class="fas fa-spinner fa-spin"></i>
 				</div>
-				<div class="text-lg">読み込み中...</div>
 			</div>
 		</div>
 	{:else if $playlists.error}

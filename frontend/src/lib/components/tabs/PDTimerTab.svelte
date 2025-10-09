@@ -100,15 +100,15 @@
 	
 	<div class="text-center">
 		<!-- タイマー表示 -->
-		<div class="timer-display text-6xl font-bold text-primary font-mono mb-8">
+		<div class="timer-display font-bold text-primary font-mono mb-8">
 			{displayTime}
 		</div>
 		
 		<!-- フェーズ表示 -->
 		<div class="phase-display mb-6">
-			<h3 class="text-2xl font-bold {phaseColor} mb-2">{phaseText}</h3>
+			<h3 class="phase-text font-bold {phaseColor} mb-2">{phaseText}</h3>
 			{#if $pomodoroTimer.phase !== 'completed'}
-				<p class="text-lg text-muted">
+				<p class="session-text text-muted">
 					セッション {$pomodoroTimer.sessions}/{$timerSettings.sessions}
 				</p>
 			{/if}
@@ -117,15 +117,15 @@
 		<!-- 状態表示 -->
 		<div class="timer-status mb-6">
 			{#if $pomodoroTimer.seconds <= 0 && $pomodoroTimer.phase !== 'completed'}
-				<p class="text-warning text-lg">設定を行ってください</p>
+				<p class="text-warning status-text">設定を行ってください</p>
 			{:else if isRunning}
-				<p class="text-success text-lg">タイマー実行中</p>
+				<p class="text-success status-text">タイマー実行中</p>
 			{:else if isPaused}
-				<p class="text-warning text-lg">一時停止中</p>
+				<p class="text-warning status-text">一時停止中</p>
 			{:else if $pomodoroTimer.phase === 'completed'}
-				<p class="text-warning text-lg">全セッション完了！</p>
+				<p class="text-warning status-text">全セッション完了！</p>
 			{:else}
-				<p class="text-info text-lg">準備完了</p>
+				<p class="text-info status-text">準備完了</p>
 			{/if}
 		</div>
 		
@@ -158,14 +158,14 @@
 		<!-- 進捗表示 -->
 		{#if $pomodoroTimer.phase !== 'completed'}
 			<div class="progress-section mb-8">
-				<h3 class="text-lg font-semibold mb-4">進捗</h3>
+				<h3 class="progress-title font-semibold mb-4">進捗</h3>
 				<div class="progress-bar">
 					<div 
 						class="progress-fill" 
 						style="width: {($pomodoroTimer.sessions / $timerSettings.sessions) * 100}%"
 					></div>
 				</div>
-				<p class="text-sm text-muted mt-2">
+				<p class="progress-text text-muted mt-2">
 					{$pomodoroTimer.sessions} / {$timerSettings.sessions} セッション完了
 				</p>
 			</div>
@@ -298,36 +298,64 @@
 
 <style>
 	.timer-display {
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+		font-size: 3.5rem;
+		text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+		line-height: 1.2;
 	}
 	
-	.timer-status p {
+	@media (min-width: 768px) {
+		.timer-display {
+			font-size: 4.5rem;
+		}
+	}
+	
+	@media (min-width: 1024px) {
+		.timer-display {
+			font-size: 5.5rem;
+		}
+	}
+	
+	.timer-status .status-text {
 		font-weight: 600;
+		font-size: 1.3rem;
 	}
 	
-	.phase-display h3 {
-		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+	.phase-display .phase-text {
+		font-size: 2rem;
+		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+	}
+	
+	.phase-display .session-text {
+		font-size: 1.3rem;
 	}
 	
 	.progress-section {
-		max-width: 400px;
+		max-width: 500px;
 		margin: 0 auto;
+	}
+	
+	.progress-section .progress-title {
+		font-size: 1.5rem;
+	}
+	
+	.progress-section .progress-text {
+		font-size: 1.1rem;
 	}
 	
 	.progress-bar {
 		width: 100%;
-		height: 20px;
+		height: 28px;
 		background: var(--bg-secondary);
-		border-radius: 10px;
+		border-radius: 14px;
 		overflow: hidden;
-		border: 2px solid var(--border-color);
+		border: 3px solid var(--border-color);
 	}
 	
 	.progress-fill {
 		height: 100%;
 		background: linear-gradient(90deg, var(--success-color), var(--primary-color));
 		transition: width 0.3s ease;
-		border-radius: 8px;
+		border-radius: 11px;
 	}
 	
 	.settings-grid {
@@ -355,26 +383,37 @@
 	}
 	
 	.input-controls input {
-		width: 60px;
+		width: 80px;
 		text-align: center;
-		font-size: 1.1rem;
+		font-size: 1.5rem;
 		font-weight: bold;
 		cursor: default;
 		user-select: none;
+		padding: 0.75rem;
 	}
 	
 	.input-controls .btn {
-		padding: 0.5rem;
-		min-width: 35px;
+		padding: 0.75rem 1rem;
+		min-width: 45px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		font-size: 1.2rem;
+	}
+	
+	.input-controls .btn i {
+		font-size: 1.3rem;
 	}
 	
 	.btn-lg {
-		padding: 0.75rem 1.5rem;
-		font-size: 1.1rem;
-		min-width: 120px;
+		padding: 1rem 2rem;
+		font-size: 1.3rem;
+		min-width: 150px;
+	}
+	
+	.btn-lg i {
+		font-size: 1.5rem;
+		margin-right: 0.5rem;
 	}
 	
 	@media (max-width: 768px) {

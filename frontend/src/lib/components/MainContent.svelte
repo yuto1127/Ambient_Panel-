@@ -23,22 +23,15 @@
 	
 	<div class="content-area" key="{$currentTab}">
 		{#if $currentTab === 'spotify'}
-			<div>SpotifyTab をレンダリング中...</div>
 			<SpotifyTab />
 		{:else if $currentTab === 'calendar'}
-			<div>CalendarTab をレンダリング中...</div>
 			<CalendarTab />
 		{:else if $currentTab === 'timer'}
-			<div>TimerTab をレンダリング中...</div>
 			<TimerTab />
 		{:else if $currentTab === 'pdtimer'}
-			<div>PDTimerTab をレンダリング中...</div>
 			<PDTimerTab />
 		{:else if $currentTab === 'news'}
-			<div>NewsTab をレンダリング中...</div>
 			<NewsTab />
-		{:else}
-			<div>未知のタブ: {$currentTab}</div>
 		{/if}
 	</div>
 </div>
