@@ -55,6 +55,24 @@
 			}));
 		}
 	}
+
+	function getCO2Status(co2) {
+		if (co2 >= 2000) {
+			return { label: '危険', color: '#dc2626', icon: 'fa-exclamation-triangle', bgColor: '#fee2e2' };
+		} else if (co2 >= 1000) {
+			return { label: '要注意', color: '#f97316', icon: 'fa-exclamation-circle', bgColor: '#ffedd5' };
+		} else if (co2 >= 700) {
+			return { label: '注意', color: '#eab308', icon: 'fa-info-circle', bgColor: '#fef9c3' };
+		} else if (co2 >= 450) {
+			return { label: '通常', color: '#3b82f6', icon: 'fa-check-circle', bgColor: '#dbeafe' };
+		} else if (co2 >= 350) {
+			return { label: '最適', color: '#10b981', icon: 'fa-check-circle', bgColor: '#d1fae5' };
+		} else {
+			return { label: '低い', color: '#6b7280', icon: 'fa-question-circle', bgColor: '#f3f4f6' };
+		}
+	}
+
+	$: co2Status = getCO2Status($environmentData.co2);
 </script>
 
 <div class="widget environment">
@@ -81,10 +99,16 @@
 				</div>
 			</div>
 			
-			<div class="env-co2 flex items-center justify-between">
-				<div class="co2-label text-sm text-secondary">CO2:</div>
-				<div class="co2-value text-lg font-bold text-primary">
-					{$environmentData.co2} ppm
+			<div class="env-co2">
+				<div class="flex items-center justify-between mb-2">
+					<div class="co2-label text-sm text-secondary">CO2:</div>
+					<div class="co2-value text-lg font-bold text-primary">
+						{$environmentData.co2} ppm
+					</div>
+				</div>
+				<div class="co2-status-badge" style="background-color: {co2Status.bgColor}; border-left: 4px solid {co2Status.color};">
+					<i class="fas {co2Status.icon}" style="color: {co2Status.color};"></i>
+					<span class="status-label" style="color: {co2Status.color};">{co2Status.label}</span>
 				</div>
 			</div>
 			
@@ -102,3 +126,28 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	.co2-status-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		transition: all 0.3s ease;
+	}
+
+	.co2-status-badge i {
+		font-size: 1rem;
+	}
+
+	.status-label {
+		font-weight: 700;
+	}
+
+	.env-co2 {
+		margin-top: 0.5rem;
+	}
+</style>
