@@ -25,29 +25,14 @@ async def get_news_headlines() -> Dict[str, Any]:
         Dict[str, Any]: ニュースヘッドライン一覧
     """
     if not NEWS_API_KEY:
-        logger.warning("News API key not configured, returning mock data")
+        logger.warning("News API key not configured")
         return {
-            "success": True,
+            "success": False,
+            "error": "ニュースAPIキーが設定されていません",
             "data": {
-                "articles": [
-                    {
-                        "title": "サンプルニュース1",
-                        "description": "これはサンプルのニュース記事です。",
-                        "url": "https://example.com/news1",
-                        "published_at": datetime.now().isoformat(),
-                        "source": "サンプルニュース"
-                    },
-                    {
-                        "title": "サンプルニュース2",
-                        "description": "これもサンプルのニュース記事です。",
-                        "url": "https://example.com/news2",
-                        "published_at": datetime.now().isoformat(),
-                        "source": "サンプルニュース"
-                    }
-                ],
-                "total_results": 2
-            },
-            "source": "mock"
+                "articles": [],
+                "total_results": 0
+            }
         }
     
     try:

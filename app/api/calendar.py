@@ -25,36 +25,30 @@ async def get_calendar_events() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: カレンダー予定一覧
     """
-    # TODO: Google Calendar APIを使用して予定を取得
-    # 現在はモックデータを返す
-    
-    mock_events = [
-        {
-            "id": "event_1",
-            "title": "会議",
-            "start": "2024-01-01T10:00:00",
-            "end": "2024-01-01T11:00:00",
-            "location": "会議室A",
-            "description": "プロジェクト会議"
-        },
-        {
-            "id": "event_2",
-            "title": "ランチ",
-            "start": "2024-01-01T12:00:00",
-            "end": "2024-01-01T13:00:00",
-            "location": "レストラン",
-            "description": "チームランチ"
+    try:
+        logger.info("Fetching calendar events from iCloud calendars")
+        events = await icloud_service.get_all_events()
+        logger.info(f"iCloud service returned {len(events)} events")
+        
+        return {
+            "success": True,
+            "data": {
+                "events": events,
+                "count": len(events)
+            },
+            "source": "icloud"
         }
-    ]
-    
-    return {
-        "success": True,
-        "data": {
-            "events": mock_events,
-            "count": len(mock_events)
-        },
-        "source": "mock"
-    }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch calendar events: {e}")
+        return {
+            "success": False,
+            "error": f"カレンダーデータの取得に失敗しました: {str(e)}",
+            "data": {
+                "events": [],
+                "count": 0
+            }
+        }
 
 @router.get("/today")
 async def get_today_events() -> Dict[str, Any]:
@@ -75,17 +69,11 @@ async def get_today_events() -> Dict[str, Any]:
         events = await icloud_service.get_today_events()
         logger.info(f"iCloud service returned {len(events)} events")
         
-        # イベントが空の場合、サンプルデータを追加
-        if not events:
-            logger.info("No events found, adding sample events for today")
-            events = generate_mock_day_events(today_jst.year, today_jst.month, today_jst.day)
-            logger.info(f"Generated {len(events)} sample events for today")
-        
         # デバッグ: イベントの内容をログ出力
         if events:
             logger.info(f"Events for today: {[event.get('title', 'No title') for event in events]}")
         else:
-            logger.warning("No events generated for today")
+            logger.info("No events found for today")
         
         return {
             "success": True,
@@ -94,30 +82,19 @@ async def get_today_events() -> Dict[str, Any]:
                 "date": today_str,
                 "count": len(events)
             },
-            "source": "sample" if len(events) > 0 and any('sample' in str(event.get('id', '')) for event in events) else "icloud"
+            "source": "icloud"
         }
         
     except Exception as e:
         logger.error(f"Failed to fetch today's events: {e}")
-        # エラー時はモックデータを返す（日本時間使用）
-        import pytz
-        jst = pytz.timezone('Asia/Tokyo')
-        today_jst = datetime.now(jst)
-        today_str = today_jst.strftime("%Y-%m-%d")
-        
-        # より詳細なサンプルデータを生成
-        mock_events = generate_mock_day_events(today_jst.year, today_jst.month, today_jst.day)
-        logger.info(f"Generated {len(mock_events)} fallback events for today")
-        
         return {
-            "success": True,  # フォールバックでも成功として扱う
+            "success": False,
+            "error": f"今日の予定の取得に失敗しました: {str(e)}",
             "data": {
-                "events": mock_events,
+                "events": [],
                 "date": today_str,
-                "count": len(mock_events)
-            },
-            "source": "fallback",
-            "note": f"iCloud接続エラー: {str(e)}"
+                "count": 0
+            }
         }
 
 @router.get("/month/{year}/{month}")

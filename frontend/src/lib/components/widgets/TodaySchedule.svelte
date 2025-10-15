@@ -6,6 +6,7 @@
 
 	let todayCache = null;
 	let lastCacheTime = 0;
+	let errorMessage = null;
 
 	onMount(async () => {
 		await loadTodayEvents();
@@ -27,6 +28,7 @@
 
 		try {
 			console.log('今日の予定を読み込み中...');
+			errorMessage = null; // エラーメッセージをリセット
 			const data = await api.getTodayEvents();
 			if (data.success) {
 				const events = data.data.events;
@@ -53,9 +55,12 @@
 				lastCacheTime = Date.now();
 			} else {
 				console.error('今日の予定APIからのレスポンスが失敗:', data);
+				errorMessage = data.error || '今日の予定の取得に失敗しました';
+				todayEvents.set([]);
 			}
 		} catch (error) {
 			console.error('今日の予定の読み込みエラー:', error);
+			errorMessage = '今日の予定の読み込み中にエラーが発生しました';
 			todayEvents.set([]);
 		}
 	}
@@ -80,7 +85,12 @@
 		</button>
 	</div>
 	
-	{#if $todayEvents.length === 0}
+	{#if errorMessage}
+		<div class="text-center text-danger text-sm py-4">
+			<i class="fas fa-exclamation-triangle mb-2"></i>
+			<div>{errorMessage}</div>
+		</div>
+	{:else if $todayEvents.length === 0}
 		<div class="text-center text-muted text-sm py-4">
 			<i class="fas fa-calendar-check"></i>
 			予定なし

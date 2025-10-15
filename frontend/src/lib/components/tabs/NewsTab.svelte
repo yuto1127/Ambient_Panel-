@@ -17,12 +17,18 @@
 					loading: false,
 					error: null
 				});
+			} else {
+				newsData.set({
+					articles: [],
+					loading: false,
+					error: data.error || 'ニュースの取得に失敗しました'
+				});
 			}
 		} catch (error) {
 			newsData.update(state => ({
 				...state,
 				loading: false,
-				error: error.message
+				error: error.message || 'ニュースの読み込み中にエラーが発生しました'
 			}));
 		}
 	}
@@ -44,9 +50,17 @@
 			</div>
 		</div>
 	{:else if $newsData.error}
-		<div class="text-center text-danger">
-			<i class="fas fa-exclamation-triangle mb-2"></i>
-			<div>エラー: {$newsData.error}</div>
+		<div class="text-center text-red-500 py-8">
+			<i class="fas fa-exclamation-triangle mb-3 text-2xl"></i>
+			<div class="text-lg font-medium mb-2">ニュースの取得に失敗しました</div>
+			<div class="text-sm text-gray-400 mb-4">{$newsData.error}</div>
+			<button 
+				class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+				on:click={loadNews}
+			>
+				<i class="fas fa-sync-alt mr-2"></i>
+				再試行
+			</button>
 		</div>
 	{:else}
 		<div class="flex flex-col gap-5">

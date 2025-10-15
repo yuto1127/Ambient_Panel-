@@ -140,22 +140,19 @@ class EnvironmentSensor:
         try:
             # データが準備できているかチェック
             if not self.sensor.data_ready:
-                # キャッシュされたデータがあれば返す
-                if self.last_data:
-                    logger.debug("Data not ready, using cached data")
-                    return self.last_data
                 return {
                     "temperature": 0.0,
                     "humidity": 0.0,
                     "co2": 0,
-                    "error": "Data not ready"
+                    "error": "センサーデータが準備できていません",
+                    "note": "センサーの初期化が完了していない可能性があります"
                 }
             
             # データを取得
             data = {
                 "temperature": round(self.sensor.temperature, 1),
                 "humidity": round(self.sensor.relative_humidity, 1),
-                "co2": int(self.sensor.CO2),
+                "co2": int(self.sensor.co2),
                 "timestamp": current_time
             }
             
@@ -168,15 +165,12 @@ class EnvironmentSensor:
             
         except Exception as e:
             logger.error(f"❌ Error reading SCD4X environment data: {e}")
-            # エラー時はキャッシュされたデータがあれば返す
-            if self.last_data:
-                logger.debug("Error occurred, using cached data")
-                return self.last_data
             return {
                 "temperature": 0.0,
                 "humidity": 0.0,
                 "co2": 0,
-                "error": str(e)
+                "error": f"環境センサーの読み取りに失敗しました: {str(e)}",
+                "note": "センサーが接続されていないか、ハードウェアエラーが発生しています"
             }
     
     def get_sensor_status(self) -> Dict[str, any]:

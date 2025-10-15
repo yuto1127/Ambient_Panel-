@@ -43,7 +43,8 @@
 				environmentData.update(state => ({
 					...state,
 					loading: false,
-					error: 'API returned success: false'
+					error: data.error || '環境データの取得に失敗しました',
+					note: data.note || null
 				}));
 			}
 		} catch (error) {
@@ -83,11 +84,16 @@
 			</div>
 		{:else if $environmentData.error}
 			<div class="text-center text-red-500">
-				<div class="text-sm">エラー: {$environmentData.error}</div>
+				<i class="fas fa-exclamation-triangle mb-2 text-lg"></i>
+				<div class="text-sm mb-2">{$environmentData.error}</div>
+				{#if $environmentData.note}
+					<div class="text-xs text-gray-500 mb-2">{$environmentData.note}</div>
+				{/if}
 				<button 
-					class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs"
+					class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
 					on:click={loadEnvironmentData}
 				>
+					<i class="fas fa-sync-alt mr-1"></i>
 					再試行
 				</button>
 			</div>

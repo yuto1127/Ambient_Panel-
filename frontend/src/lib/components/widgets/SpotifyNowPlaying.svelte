@@ -67,7 +67,7 @@
 		}
 	}
 
-	$: progressPercentage = $spotifyStatus.track.duration_ms > 0 
+	$: progressPercentage = $spotifyStatus.track?.duration_ms > 0 
 		? ($spotifyStatus.track.progress_ms / $spotifyStatus.track.duration_ms) * 100 
 		: 0;
 </script>
@@ -80,10 +80,10 @@
 			</div>
 			<div class="track-info flex-1">
 				<div class="track-name text-sm font-bold text-primary mb-1">
-					曲名
+					{$spotifyStatus.track?.name || '曲名'}
 				</div>
 				<div class="artist-name text-xs text-secondary">
-					アーティスト名
+					{$spotifyStatus.track?.artists?.[0]?.name || 'アーティスト名'}
 				</div>
 			</div>
 		</div>
@@ -91,11 +91,11 @@
 		<div class="progress-bar mb-4" style="width: 100%; height: 4px; background: #404040; border-radius: 2px; overflow: hidden; position: relative;">
 			<div 
 				class="progress" 
-				style="height: 100%; background: #1db954; width: 30%; transition: width 0.3s ease;"
+				style="height: 100%; background: #1db954; width: {progressPercentage}%; transition: width 0.3s ease;"
 			></div>
 			<div 
 				class="progress-handle" 
-				style="position: absolute; top: -2px; left: 30%; width: 8px; height: 8px; background: white; border-radius: 50%;"
+				style="position: absolute; top: -2px; left: {progressPercentage}%; width: 8px; height: 8px; background: white; border-radius: 50%;"
 			></div>
 		</div>
 		
