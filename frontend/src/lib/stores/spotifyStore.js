@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
 
 export const spotifyStatus = writable({
+	authenticated: false,
+	connected: false,
 	isPlaying: false,
 	track: {
 		name: '--',

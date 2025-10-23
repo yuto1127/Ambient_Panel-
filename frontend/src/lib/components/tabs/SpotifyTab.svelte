@@ -11,7 +11,13 @@
 	let selectedDevice = null;
 	
 	// spotifyStatusストアの変更を監視
-	$: isAuthenticated = $spotifyStatus?.authenticated || false;
+	$: {
+		isAuthenticated = $spotifyStatus?.authenticated || false;
+		console.log('SpotifyTab: 認証状態が更新されました:', {
+			spotifyStatus: $spotifyStatus,
+			isAuthenticated: isAuthenticated
+		});
+	}
 
 	onMount(async () => {
 		console.log('SpotifyTab: コンポーネントがマウントされました');
@@ -28,7 +34,18 @@
 			const statusData = await statusResponse.json();
 			console.log('Spotify status:', statusData);
 			
-			spotifyStatus.set(statusData);
+			console.log('SpotifyTab: ストアを更新中:', statusData);
+			spotifyStatus.update(currentState => ({
+				...currentState, // 既存の状態を保持
+				...statusData, // 新しい状態で上書き
+				loading: false,
+				error: null
+			}));
+			console.log('SpotifyTab: ストア更新後の状態:', $spotifyStatus);
+			
+			// ローカル変数も直接更新
+			isAuthenticated = statusData.authenticated || false;
+			console.log('SpotifyTab: ローカル認証状態を更新:', isAuthenticated);
 
 			if (statusData.authenticated) {
 				// プレイリストを取得
@@ -62,6 +79,10 @@
 				if (authData.success) {
 					authUrl = authData.auth_url;
 				}
+				
+				// ローカル変数も更新
+				isAuthenticated = false;
+				console.log('SpotifyTab: 認証されていないため、ローカル状態をfalseに設定');
 				
 				playlists.set({
 					items: [],

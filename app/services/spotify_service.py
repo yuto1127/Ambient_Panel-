@@ -56,18 +56,30 @@ class SpotifyService:
             }
             with open(self.token_file, 'w') as f:
                 json.dump(tokens, f)
+            logger.info(f"トークンを保存しました。リフレッシュトークン: {'あり' if self.refresh_token else 'なし'}")
         except Exception as e:
             logger.error(f"トークンの保存に失敗: {e}")
     
     def is_authenticated(self) -> bool:
         """認証済みかどうかを確認"""
         if not self.access_token:
+            logger.warning("アクセストークンがありません")
             return False
         
         # トークンの有効期限をチェック
         import time
-        if time.time() >= self.token_expires_at - 300:  # 5分前にリフレッシュ
-            return self._refresh_access_token()
+        current_time = time.time()
+        time_until_expiry = self.token_expires_at - current_time
+        
+        logger.info(f"トークン有効期限まで: {time_until_expiry:.0f}秒")
+        
+        if current_time >= self.token_expires_at - 300:  # 5分前にリフレッシュ
+            logger.info("トークンがまもなく期限切れのため、リフレッシュを試行します")
+            if self.refresh_token:
+                return self._refresh_access_token()
+            else:
+                logger.error("リフレッシュトークンがありません。再認証が必要です")
+                return False
         
         return True
     
@@ -78,7 +90,8 @@ class SpotifyService:
             'response_type': 'code',
             'redirect_uri': self.redirect_uri,
             'scope': self.scope,
-            'show_dialog': 'true'
+            'show_dialog': 'true',
+            'access_type': 'offline'  # リフレッシュトークンを取得するために必要
         }
         
         auth_url = f"https://accounts.spotify.com/authorize?{urlencode(auth_params)}"
@@ -120,12 +133,17 @@ class SpotifyService:
                         import time
                         self.token_expires_at = time.time() + token_response['expires_in']
                         
+                        # リフレッシュトークンが取得できなかった場合の警告
+                        if not self.refresh_token:
+                            logger.warning("リフレッシュトークンが取得できませんでした。認証URLにaccess_type=offlineが含まれているか確認してください。")
+                        
                         self._save_tokens()
                         
                         return {
                             "success": True,
                             "access_token": self.access_token,
-                            "expires_in": token_response['expires_in']
+                            "expires_in": token_response['expires_in'],
+                            "refresh_token": self.refresh_token
                         }
                     else:
                         error_data = await response.json()
@@ -220,10 +238,23 @@ class SpotifyService:
                                 logger.error(f"JSON解析エラー: {json_error}")
                                 return {"success": False, "error": "Invalid JSON response"}
                         else:
-                            # 非JSONレスポンスの場合
-                            text_data = await response.text()
-                            logger.warning(f"非JSONレスポンス: {text_data[:200]}...")
-                            return {"success": False, "error": f"Unexpected response type: {content_type}"}
+                            # 非JSONレスポンスの場合でも、空の場合は成功として扱う
+                            try:
+                                text_data = await response.text()
+                                if not text_data.strip():  # 空のテキストの場合
+                                    logger.info("空のテキストレスポンスを受信（正常）")
+                                    return {"success": True, "data": {}}
+                                else:
+                                    # Spotify APIのnext/previousエンドポイントは空のレスポンスを返すことがある
+                                    if '/me/player/next' in url or '/me/player/previous' in url or '/me/player/play' in url or '/me/player/pause' in url:
+                                        logger.info(f"Spotify制御コマンドのレスポンス（正常）: {text_data[:100]}...")
+                                        return {"success": True, "data": {}}
+                                    else:
+                                        logger.warning(f"非JSONレスポンス: {text_data[:200]}...")
+                                        return {"success": False, "error": f"Unexpected response type: {content_type}"}
+                            except Exception as text_error:
+                                logger.error(f"テキスト読み取りエラー: {text_error}")
+                                return {"success": False, "error": "Failed to read response"}
                     
                     elif response.status == 401:
                         logger.warning("認証エラー、トークンリフレッシュを試行")
@@ -236,12 +267,31 @@ class SpotifyService:
                                 if retry_response.status == 200 or retry_response.status == 204:
                                     if retry_response.content_length == 0 or retry_response.status == 204:
                                         return {"success": True, "data": {}}
-                                    try:
-                                        retry_data = await retry_response.json()
-                                        return {"success": True, "data": retry_data}
-                                    except Exception as json_error:
-                                        logger.error(f"リトライJSON解析エラー: {json_error}")
-                                        return {"success": False, "error": "Invalid JSON response on retry"}
+                                    
+                                    retry_content_type = retry_response.headers.get('content-type', '')
+                                    if 'application/json' in retry_content_type:
+                                        try:
+                                            retry_data = await retry_response.json()
+                                            return {"success": True, "data": retry_data}
+                                        except Exception as json_error:
+                                            logger.error(f"リトライJSON解析エラー: {json_error}")
+                                            return {"success": False, "error": "Invalid JSON response on retry"}
+                                    else:
+                                        # 非JSONレスポンスの場合でも、空の場合は成功として扱う
+                                        try:
+                                            retry_text = await retry_response.text()
+                                            if not retry_text.strip():
+                                                return {"success": True, "data": {}}
+                                            else:
+                                                # Spotify APIのnext/previousエンドポイントは空のレスポンスを返すことがある
+                                                if '/me/player/next' in url or '/me/player/previous' in url or '/me/player/play' in url or '/me/player/pause' in url:
+                                                    logger.info(f"Spotify制御コマンドのリトライレスポンス（正常）: {retry_text[:100]}...")
+                                                    return {"success": True, "data": {}}
+                                                else:
+                                                    return {"success": False, "error": f"Unexpected response type on retry: {retry_content_type}"}
+                                        except Exception as text_error:
+                                            logger.error(f"リトライテキスト読み取りエラー: {text_error}")
+                                            return {"success": False, "error": "Failed to read retry response"}
                     
                     # エラーレスポンスの処理
                     try:
@@ -278,13 +328,20 @@ class SpotifyService:
                 "message": "No active device"
             }
         
+        # デバッグ情報を追加
+        logger.info(f"Current playback context: {playback_data.get('context', {})}")
+        logger.info(f"Current track: {playback_data.get('item', {}).get('name', 'Unknown')}")
+        
         return {
             "success": True,
             "is_playing": playback_data.get('is_playing', False),
             "device_name": playback_data.get('device', {}).get('name', 'Unknown Device'),
             "track": playback_data.get('item', {}),
             "progress_ms": playback_data.get('progress_ms', 0),
-            "volume": playback_data.get('device', {}).get('volume_percent', 0)
+            "volume": playback_data.get('device', {}).get('volume_percent', 0),
+            "context": playback_data.get('context', {}),
+            "shuffle_state": playback_data.get('shuffle_state', False),
+            "repeat_state": playback_data.get('repeat_state', 'off')
         }
     
     async def get_playlists(self) -> Dict[str, Any]:
@@ -379,11 +436,47 @@ class SpotifyService:
     
     async def next_track(self) -> Dict[str, Any]:
         """次のトラックにスキップ"""
-        return await self._make_request('POST', 'https://api.spotify.com/v1/me/player/next')
+        # アクティブなデバイスを取得
+        devices_result = await self.get_devices()
+        device_id = None
+        
+        if devices_result['success'] and devices_result['data'].get('devices'):
+            active_devices = [d for d in devices_result['data']['devices'] if d.get('is_active', False)]
+            if active_devices:
+                device_id = active_devices[0]['id']
+                logger.info(f"Using active device: {device_id}")
+            else:
+                logger.warning("No active device found for next track")
+        
+        url = 'https://api.spotify.com/v1/me/player/next'
+        if device_id:
+            url += f'?device_id={device_id}'
+        
+        result = await self._make_request('POST', url)
+        logger.info(f"Next track result: {result}")
+        return result
     
     async def previous_track(self) -> Dict[str, Any]:
         """前のトラックに戻る"""
-        return await self._make_request('POST', 'https://api.spotify.com/v1/me/player/previous')
+        # アクティブなデバイスを取得
+        devices_result = await self.get_devices()
+        device_id = None
+        
+        if devices_result['success'] and devices_result['data'].get('devices'):
+            active_devices = [d for d in devices_result['data']['devices'] if d.get('is_active', False)]
+            if active_devices:
+                device_id = active_devices[0]['id']
+                logger.info(f"Using active device: {device_id}")
+            else:
+                logger.warning("No active device found for previous track")
+        
+        url = 'https://api.spotify.com/v1/me/player/previous'
+        if device_id:
+            url += f'?device_id={device_id}'
+        
+        result = await self._make_request('POST', url)
+        logger.info(f"Previous track result: {result}")
+        return result
     
     async def set_volume(self, volume_percent: int) -> Dict[str, Any]:
         """音量を設定"""

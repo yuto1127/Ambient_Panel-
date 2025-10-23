@@ -18,7 +18,26 @@ class ApiClient {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			
-			return await response.json();
+			// レスポンスが空の場合（204 No Content）を処理
+			if (response.status === 204 || response.headers.get('content-length') === '0') {
+				return { success: true, data: {} };
+			}
+			
+			// Content-TypeをチェックしてJSONかどうか判定
+			const contentType = response.headers.get('content-type');
+			if (contentType && contentType.includes('application/json')) {
+				const jsonData = await response.json();
+				console.log(`API response for ${endpoint}:`, jsonData);
+				return jsonData;
+			} else {
+				// JSONでない場合や空のレスポンスの場合
+				const text = await response.text();
+				console.log(`Non-JSON response for ${endpoint}:`, text);
+				if (!text.trim()) {
+					return { success: true, data: {} };
+				}
+				return { success: true, data: text };
+			}
 		} catch (error) {
 			console.error(`API request failed for ${endpoint}:`, error);
 			throw error;
@@ -56,11 +75,9 @@ class ApiClient {
 		return this.request('/spotify/playlists');
 	}
 
-	async playTrack(trackId = null) {
-		return this.request('/spotify/play', {
-			method: 'POST',
-			body: JSON.stringify({ track_id: trackId })
-		});
+	async playTrack(trackUri = null) {
+		const url = trackUri ? `/spotify/play?track_uri=${encodeURIComponent(trackUri)}` : '/spotify/play';
+		return this.request(url, { method: 'POST' });
 	}
 
 	async pausePlayback() {
