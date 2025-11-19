@@ -53,15 +53,6 @@ class ApiClient {
 		return this.request('/environment/status');
 	}
 
-	// Weather API
-	async getCurrentWeather() {
-		return this.request('/weather/current');
-	}
-
-	async getWeatherForecast() {
-		return this.request('/weather/forecast');
-	}
-
 	// Spotify API
 	async getSpotifyStatus() {
 		return this.request('/spotify/status');
@@ -107,15 +98,6 @@ class ApiClient {
 
 	async getDayEvents(year, month, day) {
 		return this.request(`/calendar/day/${year}/${month}/${day}`);
-	}
-
-	// News API
-	async getNewsHeadlines() {
-		return this.request('/news/headlines');
-	}
-
-	async getNewsByCategory(category) {
-		return this.request(`/news/category/${category}`);
 	}
 }
 

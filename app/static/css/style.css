@@ -38,7 +38,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* 日時・天気ウィジェット */
+/* 日時ウィジェット */
 .datetime-weather {
     text-align: center;
 }
@@ -59,39 +59,6 @@ body {
     font-weight: bold;
     color: #2d3748;
     font-family: 'Courier New', monospace;
-}
-
-.weather {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-}
-
-.weather-icon {
-    font-size: 3em;
-    color: #f6ad55;
-}
-
-.weather-info {
-    text-align: left;
-}
-
-.temperature {
-    font-size: 2em;
-    font-weight: bold;
-    color: #2d3748;
-}
-
-.location {
-    font-size: 1em;
-    color: #718096;
-    margin-bottom: 5px;
-}
-
-.description {
-    font-size: 0.9em;
-    color: #4a5568;
 }
 
 /* 室内環境ウィジェット */
@@ -476,44 +443,6 @@ body {
     color: #4a5568;
 }
 
-/* ニュース */
-.news-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.news-item {
-    background: rgba(102, 126, 234, 0.1);
-    border-radius: 15px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.news-item:hover {
-    background: rgba(102, 126, 234, 0.2);
-    transform: translateY(-2px);
-}
-
-.news-item h3 {
-    color: #2d3748;
-    margin-bottom: 10px;
-    font-size: 1.1em;
-    line-height: 1.4;
-}
-
-.news-item p {
-    color: #4a5568;
-    font-size: 0.9em;
-    line-height: 1.5;
-    margin-bottom: 8px;
-}
-
-.news-item .source {
-    color: #718096;
-    font-size: 0.8em;
-}
 
 /* 仮想キーボード */
 .virtual-keyboard {

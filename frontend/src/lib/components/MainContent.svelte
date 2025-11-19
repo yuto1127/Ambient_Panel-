@@ -4,7 +4,6 @@
 	import CalendarTab from './tabs/CalendarTab.svelte';
 	import TimerTab from './tabs/TimerTab.svelte';
 	import PDTimerTab from './tabs/PDTimerTab.svelte';
-	import NewsTab from './tabs/NewsTab.svelte';
 	import { currentTab } from '$lib/stores/tabStore.js';
 	import { tick } from 'svelte';
 
@@ -30,8 +29,6 @@
 			<TimerTab />
 		{:else if $currentTab === 'pdtimer'}
 			<PDTimerTab />
-		{:else if $currentTab === 'news'}
-			<NewsTab />
 		{/if}
 	</div>
 </div>

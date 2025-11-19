@@ -76,3 +76,22 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.eslintcache
+
+# Build outputs
+dist/
+build/
+*.local
+
+# Frontend build artifacts
+frontend/dist/
+frontend/build/
+frontend/.svelte-kit/

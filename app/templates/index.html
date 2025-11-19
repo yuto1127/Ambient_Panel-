@@ -11,21 +11,11 @@
     <div class="container">
         <!-- 左ペイン: ステータスパネル -->
         <div class="status-panel">
-            <!-- 日時・天気ウィジェット -->
+            <!-- 日時ウィジェット -->
             <div class="widget datetime-weather">
                 <div class="datetime">
                     <div class="date" id="current-date">--/--/--</div>
                     <div class="time" id="current-time">--:--</div>
-                </div>
-                <div class="weather">
-                    <div class="weather-icon">
-                        <i class="fas fa-sun" id="weather-icon"></i>
-                    </div>
-                    <div class="weather-info">
-                        <div class="temperature" id="weather-temp">--°C</div>
-                        <div class="location" id="weather-location">高崎市</div>
-                        <div class="description" id="weather-desc">--</div>
-                    </div>
                 </div>
             </div>
 
@@ -96,9 +86,6 @@
                 <button class="tab-btn" data-tab="pdtimer">
                     <i class="fas fa-stopwatch"></i> PDTimer
                 </button>
-                <button class="tab-btn" data-tab="news">
-                    <i class="fas fa-newspaper"></i> News
-                </button>
             </div>
 
             <!-- コンテンツ表示エリア -->
@@ -155,13 +142,6 @@
                     </div>
                 </div>
 
-                <!-- News タブ -->
-                <div class="tab-content" id="news-content">
-                    <h2>最新ニュース</h2>
-                    <div class="news-list" id="news-list">
-                        <!-- ニュースがここに動的に追加される -->
-                    </div>
-                </div>
             </div>
         </div>
     </div>

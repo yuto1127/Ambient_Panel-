@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from app.api import environment, spotify, weather, calendar, news
+from app.api import environment, spotify, calendar
 from app.services.hardware_detection import detect_environment
 
 # 環境変数の読み込み
@@ -45,9 +45,7 @@ else:
 # APIルーターの登録
 app.include_router(environment.router, prefix="/api/environment", tags=["environment"])
 app.include_router(spotify.router, prefix="/api/spotify", tags=["spotify"])
-app.include_router(weather.router, prefix="/api/weather", tags=["weather"])
 app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
-app.include_router(news.router, prefix="/api/news", tags=["news"])
 
 @app.get("/")
 async def root():

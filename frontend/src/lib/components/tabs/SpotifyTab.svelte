@@ -241,137 +241,133 @@
 <div class="tab-content active">
 	{#if selectedPlaylist}
 		<!-- プレイリスト詳細表示 -->
-		<div class="flex items-center justify-between mb-6">
-			<div class="flex items-center gap-4">
-				<button 
-					class="text-gray-400 hover:text-white transition-colors"
-					on:click={goBackToPlaylists}
-				>
-					<i class="fas fa-arrow-left text-xl"></i>
-				</button>
-				<h2 class="text-primary">{selectedPlaylist.name}</h2>
-			</div>
-			<button 
-				class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-				on:click={() => playPlaylist(selectedPlaylist.id)}
-			>
-				<i class="fas fa-play mr-2"></i>
-				再生
-			</button>
-		</div>
-		
-		<div class="mb-4 text-sm text-gray-400">
-			{selectedPlaylist.description || '説明なし'} - {selectedPlaylist.tracks_total}曲
-		</div>
-		
-		{#if availableDevices.length > 0}
-			<div class="mb-4 p-3 bg-gray-800 rounded-lg">
-				<div class="text-sm text-gray-300 mb-2">再生デバイス:</div>
-				<select 
-					class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600"
-					bind:value={selectedDevice}
-					on:change={() => console.log('Device selected:', selectedDevice?.name)}
-				>
-					{#each availableDevices as device}
-						<option value={device} selected={device.is_active}>
-							{device.name} {device.is_active ? '(アクティブ)' : ''}
-						</option>
-					{/each}
-				</select>
-				{#if selectedDevice && !selectedDevice.is_active}
-					<div class="text-xs text-yellow-400 mt-2">
-						⚠️ このデバイスは現在アクティブではありません。Spotifyアプリで音楽を再生してから試してください。
+		<div class="playlist-detail-container">
+			<!-- 固定ヘッダー部分 -->
+			<div class="playlist-detail-header">
+				<div class="flex items-center justify-between mb-2">
+					<div class="flex items-center gap-3">
+						<button 
+							class="text-gray-400 hover:text-white transition-colors"
+							on:click={goBackToPlaylists}
+						>
+							<i class="fas fa-arrow-left text-lg"></i>
+						</button>
+						<h2 class="text-primary text-lg font-semibold">{selectedPlaylist.name}</h2>
+					</div>
+					<button 
+						class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition-colors text-sm"
+						on:click={() => playPlaylist(selectedPlaylist.id)}
+					>
+						<i class="fas fa-play mr-1.5"></i>
+						シャッフル再生
+					</button>
+				</div>
+				
+				<div class="mb-2 text-xs text-gray-400">
+					{selectedPlaylist.description || '説明なし'} - {selectedPlaylist.tracks_total}曲
+				</div>
+				
+				{#if availableDevices.length > 0}
+					<div class="mb-2 p-2 bg-gray-800 rounded-lg">
+						<div class="text-xs text-gray-300 mb-1">再生デバイス:</div>
+						<select 
+							class="w-full bg-gray-700 text-white p-1.5 rounded border border-gray-600 text-sm"
+							bind:value={selectedDevice}
+							on:change={() => console.log('Device selected:', selectedDevice?.name)}
+						>
+							{#each availableDevices as device}
+								<option value={device} selected={device.is_active}>
+									{device.name} {device.is_active ? '(アクティブ)' : ''}
+								</option>
+							{/each}
+						</select>
+						{#if selectedDevice && !selectedDevice.is_active}
+							<div class="text-xs text-yellow-400 mt-1">
+								⚠️ このデバイスは現在アクティブではありません。Spotifyアプリで音楽を再生してから試してください。
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<div class="mb-2 p-2 bg-yellow-900 bg-opacity-30 border border-yellow-500 border-opacity-30 rounded-lg">
+						<div class="text-yellow-300 text-xs">
+							⚠️ 利用可能なデバイスが見つかりません。SpotifyアプリまたはWebプレイヤーで音楽を再生してから試してください。
+						</div>
 					</div>
 				{/if}
 			</div>
-		{:else}
-			<div class="mb-4 p-3 bg-yellow-900 bg-opacity-30 border border-yellow-500 border-opacity-30 rounded-lg">
-				<div class="text-yellow-300 text-sm">
-					⚠️ 利用可能なデバイスが見つかりません。SpotifyアプリまたはWebプレイヤーで音楽を再生してから試してください。
-				</div>
-			</div>
-		{/if}
-		
-		{#if loadingTracks}
-			<div class="flex justify-center py-8">
-				<div class="text-center">
-					<div class="text-2xl mb-2">
-						<i class="fas fa-spinner fa-spin"></i>
-					</div>
-					<div class="text-gray-400">曲を読み込み中...</div>
-				</div>
-			</div>
-		{:else if playlistTracks.length === 0}
-			<div class="text-center text-gray-400 py-8">
-				<i class="fas fa-music mb-2 text-2xl"></i>
-				<div>曲が見つかりません</div>
-			</div>
-		{:else}
-			<div class="tracks-container" style="max-height: 60vh; overflow-y: auto; padding-right: 8px;">
-				<!-- テーブルヘッダー -->
-				<div class="track-table-header grid grid-cols-12 gap-4 px-4 py-2 text-gray-400 text-sm border-b border-gray-700 mb-2">
-					<div class="col-span-1 text-center">#</div>
-					<div class="col-span-6">タイトル</div>
-					<div class="col-span-3">アルバム</div>
-					<div class="col-span-2 text-right">
-						<i class="fas fa-clock"></i>
-					</div>
-				</div>
-				
-				<!-- 楽曲リスト -->
-				<div class="space-y-1">
-					{#each playlistTracks as track, index}
-						{@const isCurrentlyPlaying = $spotifyStatus?.track?.uri === track.uri}
-						<div 
-							class="track-row grid grid-cols-12 gap-4 px-4 py-3 rounded-lg transition-colors cursor-pointer group {isCurrentlyPlaying ? 'bg-gray-800' : 'hover:bg-gray-800'}"
-							on:click={() => playTrack(track.uri)}
-						>
-							<!-- 番号 -->
-							<div class="col-span-1 flex items-center justify-center">
-								{#if isCurrentlyPlaying}
-									<div class="playing-indicator text-green-400">
-										<i class="fas fa-volume-up text-sm"></i>
-									</div>
-								{:else}
-									<div class="track-number text-gray-400 text-sm group-hover:hidden">
-										{index + 1}
-									</div>
-									<div class="play-icon hidden group-hover:block text-white">
-										<i class="fas fa-play text-sm"></i>
-									</div>
-								{/if}
+			
+			<!-- スクロール可能なコンテンツ部分 -->
+			<div class="playlist-detail-content">
+				{#if loadingTracks}
+					<div class="flex justify-center py-8">
+						<div class="text-center">
+							<div class="text-2xl mb-2">
+								<i class="fas fa-spinner fa-spin"></i>
 							</div>
-							
-							<!-- タイトルとアーティスト -->
-							<div class="col-span-6 flex items-center gap-3">
-								<div class="track-info flex-1 min-w-0">
-									<div class="track-name {isCurrentlyPlaying ? 'text-green-400' : 'text-white'} font-medium truncate">
-										{track.name}
-									</div>
-									<div class="track-artist text-gray-400 text-sm truncate">
-										{track.artists.join(', ')}
-									</div>
-								</div>
-							</div>
-							
-							<!-- アルバム -->
-							<div class="col-span-3 flex items-center">
-								<div class="track-album text-gray-400 text-sm truncate">
-									{track.album}
-								</div>
-							</div>
-							
-							<!-- 再生時間 -->
-							<div class="col-span-2 flex items-center justify-end">
-								<div class="track-duration text-gray-400 text-sm">
-									{formatDuration(track.duration_ms)}
-								</div>
-							</div>
+							<div class="text-gray-400">曲を読み込み中...</div>
 						</div>
-					{/each}
-				</div>
+					</div>
+				{:else if playlistTracks.length === 0}
+					<div class="text-center text-gray-400 py-8">
+						<i class="fas fa-music mb-2 text-2xl"></i>
+						<div>曲が見つかりません</div>
+					</div>
+				{:else}
+					<!-- 楽曲リスト -->
+					<div>
+						{#each playlistTracks as track, index}
+							{@const isCurrentlyPlaying = $spotifyStatus?.track?.uri === track.uri}
+							<div 
+								class="track-row grid grid-cols-12 gap-4 px-4 py-3 rounded-lg transition-colors cursor-pointer group {isCurrentlyPlaying ? 'bg-gray-800' : 'hover:bg-gray-800'}"
+								on:click={() => playTrack(track.uri)}
+							>
+								<!-- 番号 -->
+								<div class="col-span-1 flex items-center justify-center">
+									{#if isCurrentlyPlaying}
+										<div class="playing-indicator text-green-400">
+											<i class="fas fa-volume-up text-sm"></i>
+										</div>
+									{:else}
+										<div class="track-number text-gray-400 text-sm group-hover:hidden">
+											{index + 1}
+										</div>
+										<div class="play-icon hidden group-hover:block text-white">
+											<i class="fas fa-play text-sm"></i>
+										</div>
+									{/if}
+								</div>
+								
+								<!-- タイトルとアーティスト -->
+								<div class="col-span-6 flex items-center gap-3">
+									<div class="track-info flex-1 min-w-0">
+										<div class="track-name {isCurrentlyPlaying ? 'text-green-400' : 'text-white'} font-medium truncate">
+											{track.name}
+										</div>
+										<div class="track-artist text-gray-400 text-sm truncate">
+											{track.artists.join(', ')}
+										</div>
+									</div>
+								</div>
+								
+								<!-- アルバム -->
+								<div class="col-span-3 flex items-center">
+									<div class="track-album text-gray-400 text-sm truncate">
+										{track.album}
+									</div>
+								</div>
+								
+								<!-- 再生時間 -->
+								<div class="col-span-2 flex items-center justify-end">
+									<div class="track-duration text-gray-400 text-sm">
+										{formatDuration(track.duration_ms)}
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	{:else}
 		<!-- プレイリスト一覧表示 -->
 		<div class="flex items-center justify-between mb-6">
@@ -494,38 +490,55 @@
 </div>
 
 <style>
-	.tracks-container::-webkit-scrollbar,
-	.playlists-container::-webkit-scrollbar {
+	.playlist-detail-container {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 500px;
+		max-height: calc(100vh - 250px);
+	}
+	
+	.playlist-detail-header {
+		flex-shrink: 0;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+		margin-bottom: 0.5rem;
+	}
+	
+	.playlist-detail-content {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding-right: 8px;
+		min-height: 0;
+	}
+	
+	.playlists-container::-webkit-scrollbar,
+	.playlist-detail-content::-webkit-scrollbar {
 		width: 8px;
 	}
 	
-	.tracks-container::-webkit-scrollbar-track,
-	.playlists-container::-webkit-scrollbar-track {
+	.playlists-container::-webkit-scrollbar-track,
+	.playlist-detail-content::-webkit-scrollbar-track {
 		background: #374151;
 		border-radius: 4px;
 	}
 	
-	.tracks-container::-webkit-scrollbar-thumb,
-	.playlists-container::-webkit-scrollbar-thumb {
+	.playlists-container::-webkit-scrollbar-thumb,
+	.playlist-detail-content::-webkit-scrollbar-thumb {
 		background: #6b7280;
 		border-radius: 4px;
 	}
 	
-	.tracks-container::-webkit-scrollbar-thumb:hover,
-	.playlists-container::-webkit-scrollbar-thumb:hover {
+	.playlists-container::-webkit-scrollbar-thumb:hover,
+	.playlist-detail-content::-webkit-scrollbar-thumb:hover {
 		background: #9ca3af;
-	}
-	
-	.track-table-header {
-		position: sticky;
-		top: 0;
-		background: rgba(17, 24, 39, 0.95);
-		backdrop-filter: blur(8px);
-		z-index: 10;
 	}
 	
 	.track-row {
 		transition: all 0.2s ease-in-out;
+		border-top: 1px solid rgba(55, 65, 81, 0.5);
+		border-bottom: 1px solid rgba(55, 65, 81, 0.5);
 	}
 	
 	.track-row:hover {

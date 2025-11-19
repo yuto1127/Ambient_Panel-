@@ -369,34 +369,48 @@ class SpotifyService:
         }
     
     async def get_playlist_tracks(self, playlist_id: str) -> Dict[str, Any]:
-        """プレイリストの詳細（曲の一覧）を取得"""
-        result = await self._make_request('GET', f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=50')
+        """プレイリストの詳細（曲の一覧）を取得（全曲を取得するためページネーション対応）"""
+        # 最初のリクエスト（limit=100はSpotify APIの最大値）
+        url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100'
+        all_tracks = []
+        total = 0
         
-        if not result['success']:
-            return result
+        while url:
+            result = await self._make_request('GET', url)
+            
+            if not result['success']:
+                return result
+            
+            tracks_data = result['data']
+            total = tracks_data.get('total', 0)  # 最初のレスポンスからtotalを取得
+            
+            # トラックを処理
+            for item in tracks_data.get('items', []):
+                track = item.get('track')
+                if track and track['type'] == 'track':  # 削除された曲やポッドキャストは除外
+                    all_tracks.append({
+                        'id': track['id'],
+                        'name': track['name'],
+                        'artists': [artist['name'] for artist in track['artists']],
+                        'album': track['album']['name'],
+                        'duration_ms': track['duration_ms'],
+                        'uri': track['uri'],
+                        'external_urls': track['external_urls'],
+                        'preview_url': track.get('preview_url'),
+                        'images': track['album'].get('images', [])
+                    })
+            
+            # 次のページがあるかチェック
+            url = tracks_data.get('next')
+            if url:
+                logger.info(f"次のページを取得中... 現在の取得数: {len(all_tracks)}/{total}")
         
-        tracks_data = result['data']
-        
-        tracks = []
-        for item in tracks_data.get('items', []):
-            track = item.get('track')
-            if track and track['type'] == 'track':  # 削除された曲やポッドキャストは除外
-                tracks.append({
-                    'id': track['id'],
-                    'name': track['name'],
-                    'artists': [artist['name'] for artist in track['artists']],
-                    'album': track['album']['name'],
-                    'duration_ms': track['duration_ms'],
-                    'uri': track['uri'],
-                    'external_urls': track['external_urls'],
-                    'preview_url': track.get('preview_url'),
-                    'images': track['album'].get('images', [])
-                })
+        logger.info(f"プレイリストの全曲を取得しました: {len(all_tracks)}曲")
         
         return {
             "success": True,
-            "tracks": tracks,
-            "total": tracks_data.get('total', 0)
+            "tracks": all_tracks,
+            "total": total
         }
     
     async def get_devices(self) -> Dict[str, Any]:
