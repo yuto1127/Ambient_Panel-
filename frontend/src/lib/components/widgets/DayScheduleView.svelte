@@ -388,17 +388,17 @@
 
 	/* 統合コンテナのスクロールバー */
 	.unified-schedule-container::-webkit-scrollbar {
-		width: 8px;
+		width: 14px;
 	}
 
 	.unified-schedule-container::-webkit-scrollbar-track {
 		background: var(--bg-tertiary);
-		border-radius: 4px;
+		border-radius: 7px;
 	}
 
 	.unified-schedule-container::-webkit-scrollbar-thumb {
 		background: var(--border-color);
-		border-radius: 4px;
+		border-radius: 7px;
 	}
 
 	.unified-schedule-container::-webkit-scrollbar-thumb:hover {

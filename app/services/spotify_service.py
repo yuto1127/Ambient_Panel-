@@ -60,6 +60,22 @@ class SpotifyService:
         except Exception as e:
             logger.error(f"トークンの保存に失敗: {e}")
     
+    def clear_tokens(self):
+        """保存されたトークンをクリア（再認証用）"""
+        try:
+            self.access_token = None
+            self.refresh_token = None
+            self.token_expires_at = 0
+            
+            if os.path.exists(self.token_file):
+                os.remove(self.token_file)
+                logger.info("トークンファイルを削除しました")
+            
+            return True
+        except Exception as e:
+            logger.error(f"トークンのクリアに失敗: {e}")
+            return False
+    
     def is_authenticated(self) -> bool:
         """認証済みかどうかを確認"""
         if not self.access_token:
@@ -85,13 +101,15 @@ class SpotifyService:
     
     def get_auth_url(self) -> str:
         """認証URLを生成"""
+        if not self.client_id:
+            raise ValueError("SPOTIFY_CLIENT_IDが設定されていません。.envファイルを確認してください。")
+        
         auth_params = {
             'client_id': self.client_id,
             'response_type': 'code',
             'redirect_uri': self.redirect_uri,
             'scope': self.scope,
-            'show_dialog': 'true',
-            'access_type': 'offline'  # リフレッシュトークンを取得するために必要
+            'show_dialog': 'true'  # 常に認証ダイアログを表示（再認証のため）
         }
         
         auth_url = f"https://accounts.spotify.com/authorize?{urlencode(auth_params)}"

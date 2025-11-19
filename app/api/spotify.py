@@ -30,6 +30,14 @@ async def get_auth_url() -> Dict[str, Any]:
             "auth_url": auth_url,
             "message": "Please visit the auth_url to authorize with Spotify"
         }
+    except ValueError as e:
+        # 設定エラー
+        logger.error(f"Configuration error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "環境変数SPOTIFY_CLIENT_IDが設定されていない可能性があります。.envファイルを確認してください。"
+        }
     except Exception as e:
         logger.error(f"Auth URL error: {e}")
         return {
@@ -322,6 +330,33 @@ async def previous_track() -> Dict[str, Any]:
         return result
     except Exception as e:
         logger.error(f"Previous track error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/reset")
+async def reset_authentication() -> Dict[str, Any]:
+    """
+    Spotify認証をリセット（トークンを削除して再認証が必要になる）
+    
+    Returns:
+        Dict[str, Any]: リセット結果
+    """
+    try:
+        success = spotify_service.clear_tokens()
+        if success:
+            return {
+                "success": True,
+                "message": "認証情報をリセットしました。再認証が必要です。"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "認証情報のリセットに失敗しました"
+            }
+    except Exception as e:
+        logger.error(f"Reset authentication error: {e}")
         return {
             "success": False,
             "error": str(e)

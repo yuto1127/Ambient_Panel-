@@ -236,6 +236,51 @@
 			window.open(authUrl, '_blank');
 		}
 	}
+
+	async function resetAuthentication() {
+		if (!confirm('認証情報をリセットしますか？再認証が必要になります。')) {
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/spotify/reset', {
+				method: 'POST'
+			});
+			const result = await response.json();
+
+			if (result.success) {
+				alert('認証情報をリセットしました。再認証を行ってください。');
+				// 状態をリセット
+				isAuthenticated = false;
+				spotifyStatus.set({
+					authenticated: false,
+					connected: false,
+					isPlaying: false,
+					track: {
+						name: '--',
+						artist: '--',
+						album: '--',
+						image_url: '/static/images/default-album.png',
+						duration_ms: 0,
+						progress_ms: 0
+					},
+					device: {
+						name: 'Ambient Panel',
+						volume_percent: 50
+					},
+					loading: false,
+					error: null
+				});
+				// 認証URLを再取得
+				await loadSpotifyData();
+			} else {
+				alert(`リセットに失敗しました: ${result.error}`);
+			}
+		} catch (error) {
+			console.error('リセットエラー:', error);
+			alert('エラーが発生しました');
+		}
+	}
 </script>
 
 <div class="tab-content active">
@@ -388,24 +433,55 @@
 	{#if !isAuthenticated}
 		<div class="mb-4 p-4 bg-yellow-900 bg-opacity-30 border border-yellow-500 border-opacity-30 rounded-lg">
 			<div class="flex items-center justify-between">
-				<div class="flex items-center">
+				<div class="flex items-center flex-1">
 					<i class="fas fa-key text-yellow-400 mr-3"></i>
-					<div>
+					<div class="flex-1">
 						<h3 class="text-yellow-300 font-semibold mb-1">Spotify認証が必要です</h3>
 						<p class="text-gray-300 text-sm">
 							Spotifyのプレイリストを表示するには、まず認証を行ってください。
 						</p>
 					</div>
 				</div>
-				{#if authUrl}
+				<div class="flex gap-2">
+					{#if authUrl}
+						<button 
+							class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+							on:click={openAuthUrl}
+						>
+							<i class="fab fa-spotify mr-2"></i>
+							認証する
+						</button>
+					{/if}
 					<button 
-						class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-						on:click={openAuthUrl}
+						class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+						on:click={resetAuthentication}
+						title="認証情報をリセットして再認証を行います"
 					>
-						<i class="fab fa-spotify mr-2"></i>
-						認証する
+						<i class="fas fa-redo mr-2"></i>
+						リセット
 					</button>
-				{/if}
+				</div>
+			</div>
+		</div>
+	{:else if $spotifyStatus.error || ($playlists.error && $playlists.error.includes('認証'))}
+		<div class="mb-4 p-4 bg-red-900 bg-opacity-30 border border-red-500 border-opacity-30 rounded-lg">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center flex-1">
+					<i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>
+					<div class="flex-1">
+						<h3 class="text-red-300 font-semibold mb-1">認証エラー</h3>
+						<p class="text-gray-300 text-sm">
+							{$spotifyStatus.error || $playlists.error || '認証に問題が発生しました。リセットして再認証を行ってください。'}
+						</p>
+					</div>
+				</div>
+				<button 
+					class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+					on:click={resetAuthentication}
+				>
+					<i class="fas fa-redo mr-2"></i>
+					認証をリセット
+				</button>
 			</div>
 		</div>
 	{/if}
@@ -515,19 +591,19 @@
 	
 	.playlists-container::-webkit-scrollbar,
 	.playlist-detail-content::-webkit-scrollbar {
-		width: 8px;
+		width: 14px;
 	}
 	
 	.playlists-container::-webkit-scrollbar-track,
 	.playlist-detail-content::-webkit-scrollbar-track {
 		background: #374151;
-		border-radius: 4px;
+		border-radius: 7px;
 	}
 	
 	.playlists-container::-webkit-scrollbar-thumb,
 	.playlist-detail-content::-webkit-scrollbar-thumb {
 		background: #6b7280;
-		border-radius: 4px;
+		border-radius: 7px;
 	}
 	
 	.playlists-container::-webkit-scrollbar-thumb:hover,
